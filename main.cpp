@@ -6,6 +6,8 @@
 
 #include <glfw/glfw3.h>
 
+#include <cxxopts.hpp>
+
 #include <iostream>
 #include <limits>
 #include <string>
@@ -50,6 +52,23 @@ int main(int argc, char * argv[])
   uint32_t width = 1024;
   uint32_t height = 768;
   bool renderSingleFrame = true;
+
+  try
+  {
+    cxxopts::Options options(argv[0], " - simple C++ ray tracer");
+    options
+      .allow_unrecognised_options()
+      .add_options()
+        ("w,width", "window width", cxxopts::value<uint32_t>(width)->default_value("1024"))
+        ("h,height", "window height", cxxopts::value<uint32_t>(height)->default_value("768"))
+        ("s,singleFrame", "render single frame", cxxopts::value<bool>()->default_value("true"));
+    options.parse(argc, argv);
+  }
+  catch (const cxxopts::OptionException& e)
+  {
+    std::cout << "Error parsing options: " << e.what() << std::endl;
+    return 1;
+  }
 
   glfwSetErrorCallback(ErrorCallback);
 

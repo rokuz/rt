@@ -20,6 +20,8 @@ include_directories(3party/glfw/include)
 
 include_directories(3party/glm)
 
+include_directories(3party/cxxopts/include)
+
 add_definitions(-DGL_SILENCE_DEPRECATION)
 
 set(SOURCE_ROOT .)
