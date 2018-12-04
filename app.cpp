@@ -52,7 +52,7 @@ void App::Render(double timeSinceStart, double elapsedTime, bool trace)
       p = glm::vec3(0.0, 0.0, 0.0);
 
     if (m_frame)
-      m_frame->Trace();
+      m_frame->Trace(timeSinceStart, elapsedTime);
 
     for (size_t i = 0; i < m_buffer->size(); ++i)
     {

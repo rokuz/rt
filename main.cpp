@@ -1,4 +1,7 @@
 #include "app.hpp"
+
+#include "ray_tracing/circles.hpp"
+
 #include "rendering/pipelinestate.hpp"
 
 #include <glfw/glfw3.h>
@@ -78,6 +81,7 @@ int main(int argc, char * argv[])
   rendering::PipelineStateManager::Instance().Initialize();
 
   std::unique_ptr<ray_tracing::Frame> frame = nullptr;
+  frame = std::make_unique<ray_tracing::Circles>();
 
   if (!app.Initialize(std::move(frame), width, height))
   {
@@ -86,7 +90,6 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  uint32_t lastFrame = std::numeric_limits<uint32_t>::max();
   double lastTime = glfwGetTime();
   while (!glfwWindowShouldClose(window))
   {
