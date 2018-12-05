@@ -16,6 +16,8 @@ add_subdirectory(3party/glm)
 
 find_library(OPENGL_LIBRARY OpenGL)
 
+include_directories(.)
+
 include_directories(3party/glfw/include)
 
 include_directories(3party/glm)
@@ -28,6 +30,12 @@ set(SOURCE_ROOT .)
 aux_source_directory(${SOURCE_ROOT} SRC_LIST)
 aux_source_directory(${SOURCE_ROOT}/rendering SRC_LIST_RENDERING)
 aux_source_directory(${SOURCE_ROOT}/ray_tracing SRC_LIST_RAY_TRACING)
+aux_source_directory(${SOURCE_ROOT}/demos SRC_LIST_DEMOS)
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${SRC_LIST_RENDERING} ${SRC_LIST_RAY_TRACING})
+add_executable(${PROJECT_NAME}
+               ${SRC_LIST}
+               ${SRC_LIST_RENDERING}
+               ${SRC_LIST_RAY_TRACING}
+               ${SRC_LIST_DEMOS})
+
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} glfw)

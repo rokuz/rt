@@ -50,7 +50,7 @@ protected:
       for (size_t x = 0; x < m_width; ++x)
       {
         auto const dx = (2.0f * static_cast<float>(x) / m_width - 1.0f) * dw;
-        glm::vec3 d = glm::normalize(m_cameraDirection * m_znear + up * dy + right * dx);
+        auto const d = glm::normalize(m_cameraDirection * m_znear + up * dy + right * dx);
         if (func)
           (*m_buffer)[y * m_width + x] = func(Ray(m_cameraPosition, d));
       }
@@ -60,9 +60,9 @@ protected:
   std::shared_ptr<std::vector<glm::vec3>> m_buffer;
   uint32_t m_width;
   uint32_t m_height;
-  glm::vec3 m_cameraPosition = glm::vec3(0.0, 0.0, 0.0);
-  glm::vec3 m_cameraDirection = glm::vec3(0.0, 0.0, 1.0);
-  float m_fov = static_cast<float>(M_PI / 3.0);
+  glm::vec3 m_cameraPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+  glm::vec3 m_cameraDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+  float m_fov = static_cast<float>(2.0f * M_PI / 3.0f);
   float m_znear = 0.001f;
   float m_zfar = 1000.0f;
 };

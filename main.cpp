@@ -1,6 +1,6 @@
 #include "app.hpp"
 
-#include "ray_tracing/circles.hpp"
+#include "demos/pretty_spheres.hpp"
 
 #include "rendering/pipelinestate.hpp"
 
@@ -8,6 +8,7 @@
 
 #include <cxxopts.hpp>
 
+#include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -49,6 +50,8 @@ void ErrorCallback(int error, const char * description)
 
 int main(int argc, char * argv[])
 {
+  std::srand(static_cast<unsigned int>(std::time(0)));
+
   uint32_t width = 1024;
   uint32_t height = 768;
   bool renderSingleFrame = true;
@@ -100,7 +103,7 @@ int main(int argc, char * argv[])
   rendering::PipelineStateManager::Instance().Initialize();
 
   std::unique_ptr<ray_tracing::Frame> frame = nullptr;
-  frame = std::make_unique<ray_tracing::Circles>();
+  frame = std::make_unique<demo::PrettySpheres>();
 
   if (!app.Initialize(std::move(frame), width, height))
   {
