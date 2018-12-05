@@ -3,7 +3,8 @@
 #include "rendering/pipelinestate.hpp"
 
 bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
-                     uint32_t screenWidth, uint32_t screenHeight)
+                     uint32_t screenWidth, uint32_t screenHeight,
+                     uint32_t rayTracingThreadsCount)
 {
   m_frame = std::move(frame);
 
@@ -15,10 +16,11 @@ bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
   m_screenWidth = screenWidth;
   m_screenHeight = screenHeight;
   m_buffer = std::make_shared<std::vector<glm::vec3>>(m_screenWidth * m_screenHeight);
+  m_secondBuffer.resize(m_screenWidth * m_screenHeight);
   m_byteBuffer = std::make_shared<std::vector<uint8_t>>(m_screenWidth * m_screenHeight * 4, 0);
 
   if (m_frame)
-    m_frame->Initialize(m_buffer, m_screenWidth, m_screenHeight);
+    m_frame->Initialize(m_buffer, m_screenWidth, m_screenHeight, rayTracingThreadsCount);
 
   m_texture = std::make_shared<rendering::Texture>();
   m_texture->Init(GL_RGBA8, m_byteBuffer->data(), static_cast<uint32_t>(m_byteBuffer->size()),
@@ -38,6 +40,9 @@ bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
 
 void App::Uninitialize()
 {
+  if (m_frame)
+    m_frame->Uninitialize();
+
   assert(m_texture.use_count() == 1);
   m_texture.reset();
   m_quad.reset();
@@ -46,23 +51,24 @@ void App::Uninitialize()
 
 void App::Render(double timeSinceStart, double elapsedTime, bool trace)
 {
-  if (trace)
+  bool const hasFinished = (m_frame ? m_frame->HasFinished() : false);
+  if (trace && hasFinished)
   {
     for (auto & p : *m_buffer)
       p = glm::vec3(0.0, 0.0, 0.0);
 
     if (m_frame)
       m_frame->Trace(timeSinceStart, elapsedTime);
-
-    for (size_t i = 0; i < m_buffer->size(); ++i)
-    {
-      (*m_byteBuffer)[i * 4 + 0] = static_cast<uint8_t>(255 * (*m_buffer)[i].r);
-      (*m_byteBuffer)[i * 4 + 1] = static_cast<uint8_t>(255 * (*m_buffer)[i].g);
-      (*m_byteBuffer)[i * 4 + 2] = static_cast<uint8_t>(255 * (*m_buffer)[i].b);
-      (*m_byteBuffer)[i * 4 + 3] = 255;
-    }
-    m_texture->Update(m_byteBuffer->data(), static_cast<uint32_t>(m_byteBuffer->size()));
   }
+
+  if (m_frame && m_frame->InProgress())
+  {
+    m_frame->CopyToBuffer(m_secondBuffer);
+    UpdateTexture(m_secondBuffer);
+  }
+
+  if (m_frame && m_frame->HasFinished())
+    UpdateTexture(*m_buffer);
 
   if (m_quadGpuProgram->Use())
   {
@@ -77,6 +83,18 @@ void App::OnKeyButton(int key, int scancode, bool pressed) {}
 void App::OnMouseButton(double xpos, double ypos, int button, bool pressed) {}
 
 void App::OnMouseMove(double xpos, double ypos) {}
+
+void App::UpdateTexture(std::vector<glm::vec3> const & buffer)
+{
+  for (size_t i = 0; i < buffer.size(); ++i)
+  {
+    (*m_byteBuffer)[i * 4 + 0] = static_cast<uint8_t>(255 * buffer[i].r);
+    (*m_byteBuffer)[i * 4 + 1] = static_cast<uint8_t>(255 * buffer[i].g);
+    (*m_byteBuffer)[i * 4 + 2] = static_cast<uint8_t>(255 * buffer[i].b);
+    (*m_byteBuffer)[i * 4 + 3] = 255;
+  }
+  m_texture->Update(m_byteBuffer->data(), static_cast<uint32_t>(m_byteBuffer->size()));
+}
 
 void App::CheckOpenGLErrors()
 {

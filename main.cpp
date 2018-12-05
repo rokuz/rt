@@ -51,6 +51,7 @@ int main(int argc, char * argv[])
 {
   uint32_t width = 1024;
   uint32_t height = 768;
+  uint32_t rtThreadsCount = 4;
   bool renderSingleFrame = true;
 
   try
@@ -61,7 +62,8 @@ int main(int argc, char * argv[])
       .add_options()
         ("w,width", "window width", cxxopts::value<uint32_t>(width)->default_value("1024"))
         ("h,height", "window height", cxxopts::value<uint32_t>(height)->default_value("768"))
-        ("s,singleFrame", "render single frame", cxxopts::value<bool>()->default_value("true"));
+        ("s,singleFrame", "render single frame", cxxopts::value<bool>()->default_value("true"))
+        ("t,threads", "ray tracing threads count", cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"));
     options.parse(argc, argv);
   }
   catch (const cxxopts::OptionException& e)
@@ -102,7 +104,7 @@ int main(int argc, char * argv[])
   std::unique_ptr<ray_tracing::Frame> frame = nullptr;
   frame = std::make_unique<demo::PrettySpheres>();
 
-  if (!app.Initialize(std::move(frame), width, height))
+  if (!app.Initialize(std::move(frame), width, height, rtThreadsCount))
   {
     app.Uninitialize();
     glfwTerminate();

@@ -5,9 +5,10 @@
 namespace demo
 {
 bool PrettySpheres::Initialize(std::shared_ptr<std::vector<glm::vec3>> buffer,
-                               uint32_t width, uint32_t height)
+                               uint32_t width, uint32_t height,
+                               uint32_t rayTracingThreadsCount)
 {
-  if (!Frame::Initialize(buffer, width, height))
+  if (!Frame::Initialize(buffer, width, height, rayTracingThreadsCount))
     return false;
 
   m_samplesInRowCount = 3;
