@@ -8,7 +8,6 @@
 
 #include <cxxopts.hpp>
 
-#include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -50,8 +49,6 @@ void ErrorCallback(int error, const char * description)
 
 int main(int argc, char * argv[])
 {
-  std::srand(static_cast<unsigned int>(std::time(0)));
-
   uint32_t width = 1024;
   uint32_t height = 768;
   bool renderSingleFrame = true;
@@ -113,16 +110,21 @@ int main(int argc, char * argv[])
   }
 
   double lastTime = glfwGetTime();
+  bool firstFrame = true;
   while (!glfwWindowShouldClose(window))
   {
     double const currentTime = glfwGetTime();
     double const elapsedTime = currentTime - lastTime;
     lastTime = currentTime;
 
-    if (!renderSingleFrame)
-      needTrace = true;
-    app.Render(currentTime, elapsedTime, needTrace);
-    needTrace = false;
+    if (!firstFrame)
+    {
+      if (!renderSingleFrame)
+        needTrace = true;
+      app.Render(currentTime, elapsedTime, needTrace);
+      needTrace = false;
+    }
+    firstFrame = false;
 
     glfwSwapBuffers(window);
     glfwPollEvents();
