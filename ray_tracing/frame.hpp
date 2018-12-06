@@ -38,13 +38,15 @@ public:
   virtual void CopyToBuffer(ColorBuffer & buffer) {}
 
 protected:
-  virtual glm::vec3 RayTrace(Ray const & ray) { return {}; }
+  virtual glm::vec3 RayTrace(Ray const & ray, float near, float far) { return {}; }
 
   virtual void ForEachRay(RayHandler && func);
   virtual bool OnStartRow(uint32_t row) { return true; }
   virtual void OnEndRow(uint32_t row) {}
 
   void ForEachRayImpl(RayHandler && func, uint32_t startRow, uint32_t pitch);
+
+  glm::vec3 RandomInUnitSphere();
 
   std::shared_ptr<ColorBuffer> m_buffer;
   uint32_t m_width = 0;

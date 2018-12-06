@@ -21,7 +21,7 @@ void Frame::TraceAllRays()
 {
   ForEachRay([this](ray_tracing::Ray const & ray)
   {
-    return RayTrace(ray);
+    return RayTrace(ray, m_znear, m_zfar);
   });
 }
 
@@ -74,5 +74,20 @@ void Frame::ForEachRayImpl(RayHandler && func, uint32_t startRow, uint32_t pitch
 
     OnEndRow(y);
   }
+}
+
+glm::vec3 Frame::RandomInUnitSphere()
+{
+  std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+  float s, x, y, z;
+  do
+  {
+    x = distribution(m_generator);
+    y = distribution(m_generator);
+    z = distribution(m_generator);
+    s = x * x + y * y + z * z;
+  }
+  while (s >= 1.0 || s == 0.0);
+  return glm::normalize(glm::vec3(x, y, z));
 }
 }  // namespace ray_tracing
