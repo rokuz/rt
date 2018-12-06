@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ray_tracing/frame.hpp"
+#include "ray_tracing/multithreaded_frame.hpp"
 #include "ray_tracing/sphere.hpp"
 
 #include <glm/vec3.hpp>
@@ -11,13 +11,15 @@
 
 namespace demo
 {
-class PrettySpheres : public ray_tracing::Frame
+class PrettySpheres : public ray_tracing::MultiThreadedFrame
 {
 public:
-  bool Initialize(std::shared_ptr<std::vector<glm::vec3>> buffer,
+  explicit PrettySpheres(uint32_t rayTracingThreadsCount);
+
+  bool Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
                   uint32_t width, uint32_t height,
-                  uint32_t rayTracingThreadsCount) override;
-  void Trace(double timeSinceStart, double elapsedTime) override;
+                  uint32_t samplesInRowCount) override;
+  glm::vec3 RayTrace(ray_tracing::Ray const & ray) override;
 
 private:
   // Must be immutable during ray tracing.

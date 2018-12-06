@@ -19,9 +19,10 @@ public:
 
   bool Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
                   uint32_t screenWidth, uint32_t screenHeight,
-                  uint32_t rayTracingThreadsCount);
+                  uint32_t samplesInRowCount);
   void Uninitialize();
-  void Render(double timeSinceStart, double elapsedTime, bool trace);
+  void Render(double timeSinceStart, double elapsedTime);
+  void RayTrace();
 
   void OnKeyButton(int key, int scancode, bool pressed);
   void OnMouseButton(double xpos, double ypos, int button, bool pressed);
@@ -33,8 +34,9 @@ private:
 
   uint32_t m_screenWidth = 0;
   uint32_t m_screenHeight = 0;
-  std::shared_ptr<std::vector<glm::vec3>> m_buffer;
-  std::vector<glm::vec3> m_secondBuffer;
+  std::shared_ptr<ray_tracing::ColorBuffer> m_buffer;
+  ray_tracing::ColorBuffer m_realtimeBuffer;
+  double m_lastUpdateRealtimeBuffer = 0.0;
   std::shared_ptr<std::vector<uint8_t>> m_byteBuffer;
   std::unique_ptr<ray_tracing::Frame> m_frame;
 

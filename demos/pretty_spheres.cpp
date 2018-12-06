@@ -4,14 +4,16 @@
 
 namespace demo
 {
-bool PrettySpheres::Initialize(std::shared_ptr<std::vector<glm::vec3>> buffer,
-                               uint32_t width, uint32_t height,
-                               uint32_t rayTracingThreadsCount)
-{
-  if (!Frame::Initialize(buffer, width, height, rayTracingThreadsCount))
-    return false;
+PrettySpheres::PrettySpheres(uint32_t rayTracingThreadsCount)
+  : ray_tracing::MultiThreadedFrame(rayTracingThreadsCount)
+{}
 
-  m_samplesInRowCount = 3;
+bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
+                               uint32_t width, uint32_t height,
+                               uint32_t samplesInRowCount)
+{
+  if (!MultiThreadedFrame::Initialize(buffer, width, height, samplesInRowCount))
+    return false;
 
   m_cameraPosition = glm::vec3(0.0f, 8.0f, -15.0f);
   m_cameraDirection = glm::vec3(0.0f, -1.0f, 2.0f);
@@ -29,16 +31,13 @@ bool PrettySpheres::Initialize(std::shared_ptr<std::vector<glm::vec3>> buffer,
   return true;
 }
 
-void PrettySpheres::Trace(double timeSinceStart, double elapsedTime)
+glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray)
 {
-  ForEachRay([this](ray_tracing::Ray ray)
-  {
-    auto const hits = ray_tracing::TraceHitableCollection(m_spheres, ray, m_znear, m_zfar);
-    if (hits.empty())
-      return glm::vec3(1.0f, 1.0f, 1.0f);
+  auto const hits = ray_tracing::TraceHitableCollection(m_spheres, ray, m_znear, m_zfar);
+  if (hits.empty())
+    return glm::vec3(1.0f, 1.0f, 1.0f);
 
-    auto const & nearestHit = hits[0];
-    return nearestHit.m_normal * 0.5f + 0.5f;
-  });
+  auto const & nearestHit = hits[0];
+  return nearestHit.m_normal * 0.5f + 0.5f;
 }
 }  // namespace demo

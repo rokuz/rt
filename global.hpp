@@ -8,3 +8,4 @@
 #endif
 
 float constexpr kPi = static_cast<float>(3.14159265358979323846);
+float constexpr kEps = 1e-5f;

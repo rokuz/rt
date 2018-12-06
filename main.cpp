@@ -14,7 +14,6 @@
 #include <string>
 
 App app;
-bool needTrace = true;
 
 void KeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
 {
@@ -22,9 +21,6 @@ void KeyCallback(GLFWwindow * window, int key, int scancode, int action, int mod
   {
   case GLFW_KEY_ESCAPE:
     glfwSetWindowShouldClose(window, GL_TRUE);
-    break;
-  case GLFW_KEY_T:
-    needTrace = true;
     break;
   default:
     app.OnKeyButton(key, scancode, action != GLFW_RELEASE);
@@ -53,18 +49,21 @@ int main(int argc, char * argv[])
   uint32_t width = 1024;
   uint32_t height = 768;
   uint32_t rtThreadsCount = 4;
-  bool renderSingleFrame = true;
-
+  uint32_t samplesInRow = 1;
   try
   {
     cxxopts::Options options(argv[0], " - simple C++ ray tracer");
     options
       .allow_unrecognised_options()
       .add_options()
-        ("w,width", "window width", cxxopts::value<uint32_t>(width)->default_value("1024"))
-        ("h,height", "window height", cxxopts::value<uint32_t>(height)->default_value("768"))
-        ("s,singleFrame", "render single frame", cxxopts::value<bool>()->default_value("true"))
-        ("t,threads", "ray tracing threads count", cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"));
+        ("w,width", "Window width",
+          cxxopts::value<uint32_t>(width)->default_value("1024"))
+        ("h,height", "Window height",
+          cxxopts::value<uint32_t>(height)->default_value("768"))
+        ("s,samples", "Supersampling samples in row count",
+          cxxopts::value<uint32_t>(samplesInRow)->default_value("1"))
+        ("t,threads", "Ray tracing threads count",
+          cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"));
     options.parse(argc, argv);
   }
   catch (const cxxopts::OptionException& e)
@@ -120,9 +119,9 @@ int main(int argc, char * argv[])
   rendering::PipelineStateManager::Instance().Initialize();
 
   std::unique_ptr<ray_tracing::Frame> frame = nullptr;
-  frame = std::make_unique<demo::PrettySpheres>();
+  frame = std::make_unique<demo::PrettySpheres>(rtThreadsCount);
 
-  if (!app.Initialize(std::move(frame), width, height, rtThreadsCount))
+  if (!app.Initialize(std::move(frame), width, height, samplesInRow))
   {
     app.Uninitialize();
     glfwTerminate();
@@ -137,14 +136,13 @@ int main(int argc, char * argv[])
     double const elapsedTime = currentTime - lastTime;
     lastTime = currentTime;
 
-    if (!firstFrame)
+    app.Render(currentTime, elapsedTime);
+
+    if (firstFrame)
     {
-      if (!renderSingleFrame)
-        needTrace = true;
-      app.Render(currentTime, elapsedTime, needTrace);
-      needTrace = false;
+      firstFrame = false;
+      app.RayTrace();
     }
-    firstFrame = false;
 
     glfwSwapBuffers(window);
     glfwPollEvents();

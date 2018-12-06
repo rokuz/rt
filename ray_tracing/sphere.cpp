@@ -1,5 +1,7 @@
 #include "sphere.hpp"
 
+#include "global.hpp"
+
 #include <glm/geometric.hpp>
 
 #include <algorithm>
@@ -17,7 +19,7 @@ std::vector<Hit> Sphere::Trace(Ray const & ray, float tmin, float tmax) const
   if (discriminant < 0.0f)
     return {};
 
-  if (fabs(discriminant) < 1e-5)
+  if (fabs(discriminant) < kEps)
   {
     auto const t = -b / (2.0f * a);
     if (t < tmin || t > tmax)

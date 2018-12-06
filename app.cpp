@@ -2,9 +2,11 @@
 
 #include "rendering/pipelinestate.hpp"
 
+#include <glfw/glfw3.h>
+
 bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
                      uint32_t screenWidth, uint32_t screenHeight,
-                     uint32_t rayTracingThreadsCount)
+                     uint32_t samplesInRowCount)
 {
   m_frame = std::move(frame);
 
@@ -15,12 +17,12 @@ bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
 
   m_screenWidth = screenWidth;
   m_screenHeight = screenHeight;
-  m_buffer = std::make_shared<std::vector<glm::vec3>>(m_screenWidth * m_screenHeight);
-  m_secondBuffer.resize(m_screenWidth * m_screenHeight);
+  m_buffer = std::make_shared<ray_tracing::ColorBuffer>(m_screenWidth * m_screenHeight);
+  m_realtimeBuffer.resize(m_screenWidth * m_screenHeight);
   m_byteBuffer = std::make_shared<std::vector<uint8_t>>(m_screenWidth * m_screenHeight * 4, 0);
 
   if (m_frame)
-    m_frame->Initialize(m_buffer, m_screenWidth, m_screenHeight, rayTracingThreadsCount);
+    m_frame->Initialize(m_buffer, m_screenWidth, m_screenHeight, samplesInRowCount);
 
   m_texture = std::make_shared<rendering::Texture>();
   m_texture->Init(GL_RGBA8, m_byteBuffer->data(), static_cast<uint32_t>(m_byteBuffer->size()),
@@ -49,26 +51,23 @@ void App::Uninitialize()
   m_quadGpuProgram.reset();
 }
 
-void App::Render(double timeSinceStart, double elapsedTime, bool trace)
+void App::Render(double timeSinceStart, double elapsedTime)
 {
-  bool const hasFinished = (m_frame ? m_frame->HasFinished() : false);
-  if (trace && hasFinished)
+  if (m_frame)
   {
-    for (auto & p : *m_buffer)
-      p = glm::vec3(0.0, 0.0, 0.0);
+    // Update realtime buffer to show progress.
+    float constexpr kUpdatePeriodSec = 0.25;
+    m_lastUpdateRealtimeBuffer += elapsedTime;
+    if (m_frame->InProgress() && m_lastUpdateRealtimeBuffer >= kUpdatePeriodSec)
+    {
+      m_lastUpdateRealtimeBuffer -= kUpdatePeriodSec;
+      m_frame->CopyToBuffer(m_realtimeBuffer);
+      UpdateTexture(m_realtimeBuffer);
+    }
 
-    if (m_frame)
-      m_frame->Trace(timeSinceStart, elapsedTime);
+    if (m_frame->HasFinished())
+      UpdateTexture(*m_buffer);
   }
-
-  if (m_frame && m_frame->InProgress())
-  {
-    m_frame->CopyToBuffer(m_secondBuffer);
-    UpdateTexture(m_secondBuffer);
-  }
-
-  if (m_frame && m_frame->HasFinished())
-    UpdateTexture(*m_buffer);
 
   if (m_quadGpuProgram->Use())
   {
@@ -78,7 +77,29 @@ void App::Render(double timeSinceStart, double elapsedTime, bool trace)
   CheckOpenGLErrors();
 }
 
-void App::OnKeyButton(int key, int scancode, bool pressed) {}
+void App::RayTrace()
+{
+  if (!m_frame || !m_frame->HasFinished())
+    return;
+
+  for (auto & p : *m_buffer)
+    p = glm::vec3(0.0, 0.0, 0.0);
+
+  UpdateTexture(*m_buffer);
+  m_lastUpdateRealtimeBuffer = 0.0;
+
+  m_frame->TraceAllRays();
+}
+
+void App::OnKeyButton(int key, int scancode, bool pressed)
+{
+  switch (key)
+  {
+  case GLFW_KEY_T:
+    RayTrace();
+    break;
+  }
+}
 
 void App::OnMouseButton(double xpos, double ypos, int button, bool pressed) {}
 
