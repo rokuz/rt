@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "global.hpp"
 
 #include "demos/pretty_spheres.hpp"
 
@@ -77,8 +78,8 @@ int main(int argc, char * argv[])
   if (!glfwInit())
     return 1;
 
-  uint8_t const kOpenGLMajor = 4;
-  uint8_t const kOpenGLMinor = 1;
+  uint8_t constexpr kOpenGLMajor = 4;
+  uint8_t constexpr kOpenGLMinor = 1;
   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, kOpenGLMajor);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, kOpenGLMinor);
@@ -98,6 +99,23 @@ int main(int argc, char * argv[])
   glfwSetCursorPosCallback(window, MouseMoveCallback);
 
   glfwMakeContextCurrent(window);
+
+#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+  if (gl3wInit() < 0)
+  {
+    std::cout << "Error initialization OpenGL." << std::endl;
+    glfwTerminate();
+    return 1;
+  }
+
+  if (!gl3wIsSupported(kOpenGLMajor, kOpenGLMinor))
+  {
+    std::cout << "OpenGL version " << kOpenGLMajor << "." << kOpenGLMinor << " is not supported."
+              << std::endl;
+    glfwTerminate();
+    return 1;
+  }
+#endif
 
   rendering::PipelineStateManager::Instance().Initialize();
 

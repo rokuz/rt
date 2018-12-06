@@ -1,6 +1,7 @@
 #include "gpuprogram.hpp"
 #include "mesh.hpp"
 
+#include <algorithm>
 #include <list>
 
 namespace rendering

@@ -1,6 +1,6 @@
 #include "mesh.hpp"
 
-#include <OpenGL/gl3.h>
+#include "global.hpp"
 
 #include <cassert>
 #include <functional>

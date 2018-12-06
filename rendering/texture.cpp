@@ -1,7 +1,6 @@
 #include "texture.hpp"
 
-#include <OpenGL/gl3.h>
-#include <OpenGl/gl3ext.h>
+#include "global.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -2,6 +2,8 @@
 
 #include "ray.hpp"
 
+#include "global.hpp"
+
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
 
@@ -59,7 +61,7 @@ protected:
 
   glm::vec3 m_cameraPosition = glm::vec3(0.0f, 0.0f, 0.0f);
   glm::vec3 m_cameraDirection = glm::vec3(0.0f, 0.0f, 1.0f);
-  float m_fov = static_cast<float>(2.0f * M_PI / 3.0f);
+  float m_fov = static_cast<float>(2.0f * kPi / 3.0f);
   float m_znear = 0.001f;
   float m_zfar = 1000.0f;
 };

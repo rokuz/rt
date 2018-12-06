@@ -14,7 +14,11 @@ set(GLM_INSTALL_ENABLE OFF CACHE BOOL "")
 set(GLM_TEST_ENABLE OFF CACHE BOOL "")
 add_subdirectory(3party/glm)
 
-find_library(OPENGL_LIBRARY OpenGL)
+if (WIN32)
+add_subdirectory(3party/gl3w)
+endif (WIN32)
+
+find_package(OpenGL REQUIRED)
 
 include_directories(.)
 
@@ -24,7 +28,13 @@ include_directories(3party/glm)
 
 include_directories(3party/cxxopts/include)
 
+if (WIN32)
+include_directories(3party/gl3w)
+endif (WIN32)
+
+if (APPLE)
 add_definitions(-DGL_SILENCE_DEPRECATION)
+endif (APPLE)
 
 set(SOURCE_ROOT .)
 aux_source_directory(${SOURCE_ROOT} SRC_LIST)
@@ -39,3 +49,6 @@ add_executable(${PROJECT_NAME}
                ${SRC_LIST_DEMOS})
 
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} glfw)
+if (WIN32)
+target_link_libraries(${PROJECT_NAME} gl3w)
+endif (WIN32)

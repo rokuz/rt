@@ -75,3 +75,5 @@ Thumbs.db
 .idea
 cmake-build-debug
 cmake-build-release
+.vs
+CMakeSettings.json

@@ -1,6 +1,6 @@
 #include "pipelinestate.hpp"
 
-#include <OpenGL/gl3.h>
+#include "global.hpp"
 
 #include <iostream>
 
