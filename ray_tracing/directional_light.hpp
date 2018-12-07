@@ -14,7 +14,8 @@ public:
     , m_color(color)
   {}
 
-  glm::vec3 TraceLight(Hit const & hit, Tracer && tracer) override;
+  glm::vec3 TraceLight(Ray const & ray, Hit const & hit, Tracer && tracer) override;
+  glm::vec3 GetSpecular(Ray const & ray, Hit const & hit) override;
 
 private:
   glm::vec3 TraceLightWithDepth(Hit const & hit, Tracer && tracer, int depth);

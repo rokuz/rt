@@ -30,6 +30,8 @@ public:
   {}
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
+  float GetRoughness() const override { return m_roughness; }
+  float GetRefraction() const override { return 0.5f; }
 
 private:
   glm::vec3 m_albedo;

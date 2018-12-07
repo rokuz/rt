@@ -32,8 +32,10 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
     auto const c = glm::vec3(randomFloat(m_generator), randomFloat(m_generator), randomFloat(m_generator));
 
     std::shared_ptr<Material> mat;
-    if (i >= 3)
-      mat = std::make_shared<material::Metal>(c, 0.1f * randomFloat(m_generator));
+    if (i >= 5)
+      mat = std::make_shared<material::Metal>(c, glm::mix(0.1f, 0.2f, randomFloat(m_generator)));
+    else if (i >= 2)
+      mat = std::make_shared<material::Metal>(c);
     else
       mat = std::make_shared<material::Matte>(c);
 
@@ -44,7 +46,7 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
     std::make_shared<material::Matte>(glm::vec3(0.75f, 0.75f, 0.75f))));
 
   m_lightSources.emplace_back(std::make_unique<DirectionalLight>(
-    glm::normalize(glm::vec3(1.5f, -1.0f, -0.2f)),
+    glm::normalize(glm::vec3(-0.4f, -1.0f, 0.6f)),
     glm::vec3(1.0f, 1.0f, 1.0f)));
 
   return true;
@@ -64,7 +66,15 @@ glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray, float near, floa
   if (hits.empty())
     return glm::vec3(1.0f, 1.0f, 1.0f);
 
-  return RayTraceObjects(ray, hits[0], 0.001f, far, 1);
+  auto const diffuseColor = RayTraceObjects(ray, hits[0], 0.001f, far, 1);
+
+  glm::vec3 specularColor = glm::vec3(0.0f, 0.0f, 0.0f);
+  for (auto const & source : m_lightSources)
+    specularColor += source->GetSpecular(ray, hits[0]);
+  if (!m_lightSources.empty())
+    specularColor /= m_lightSources.size();
+
+  return diffuseColor + specularColor;
 }
 
 glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_tracing::Hit const & hit,
@@ -73,25 +83,23 @@ glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_traci
   using namespace std::placeholders;
 
   auto const scatterResult = hit.m_material->Scatter(ray, hit);
-  if (scatterResult.m_radiance < 0.1f || depth >= 3)
-    return scatterResult.m_attenuation;
 
   glm::vec3 lightColor = glm::vec3(0.0f, 0.0f, 0.0f);
   for (auto const & source : m_lightSources)
-    lightColor += source->TraceLight(hit, std::bind(&PrettySpheres::HitObjects, this, _1, _2, _3));
+    lightColor += source->TraceLight(ray, hit, std::bind(&PrettySpheres::HitObjects, this, _1, _2, _3));
   if (!m_lightSources.empty())
     lightColor /= m_lightSources.size();
 
-  glm::vec3 finalColor = glm::vec3(0.0f, 0.0f, 0.0f);
-  uint32_t kCount = 3;
-  for (uint32_t i = 0; i < kCount; ++i)
+  auto c = lightColor * scatterResult.m_attenuation;
+  if (depth >= 5)
+    return c;
+
+  auto const hits = HitObjects(scatterResult.m_scatteredRay, near, far);
+  if (!hits.empty())
   {
-    auto c = lightColor * scatterResult.m_attenuation;
-    auto const hits = HitObjects(scatterResult.m_scatteredRay, near, far);
-    if (!hits.empty())
-      c *= RayTraceObjects(scatterResult.m_scatteredRay, hits[0], near, far, depth + 1);
-    finalColor += c;
+    auto const sc = c * RayTraceObjects(scatterResult.m_scatteredRay, hits[0], near, far, depth + 1);
+    c = glm::mix(sc, c, 0.5f);
   }
-  return finalColor / static_cast<float>(kCount);
+  return c;
 }
 }  // namespace demo
