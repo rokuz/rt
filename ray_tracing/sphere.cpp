@@ -27,7 +27,7 @@ std::vector<Hit> Sphere::Trace(Ray const & ray, float tmin, float tmax) const
 
     auto const p = ray.PointAt(t);
     auto const n = glm::normalize(p - m_center);
-    return {Hit(t, p, n)};
+    return {Hit(t, p, n, m_material)};
   }
 
   auto const sqrtD = sqrt(discriminant);
@@ -42,14 +42,14 @@ std::vector<Hit> Sphere::Trace(Ray const & ray, float tmin, float tmax) const
   {
     auto const p = ray.PointAt(t1);
     auto const n = glm::normalize(p - m_center);
-    return {Hit(t1, p, n)};
+    return {Hit(t1, p, n, m_material)};
   }
 
   if (hasT2 && !hasT1)
   {
     auto const p = ray.PointAt(t2);
     auto const n = glm::normalize(p - m_center);
-    return {Hit(t2, p, n)};
+    return {Hit(t2, p, n, m_material)};
   }
 
   auto const nt1 = std::min(t1, t2);
@@ -58,6 +58,6 @@ std::vector<Hit> Sphere::Trace(Ray const & ray, float tmin, float tmax) const
   auto const n1 = glm::normalize(p1 - m_center);
   auto const p2 = ray.PointAt(nt2);
   auto const n2 = glm::normalize(p2 - m_center);
-  return {Hit(nt1, p1, n1), Hit(nt2, p2, n2)};
+  return {Hit(nt1, p1, n1, m_material), Hit(nt2, p2, n2, m_material)};
 }
 }  // namespace ray_tracing

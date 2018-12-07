@@ -46,8 +46,6 @@ protected:
 
   void ForEachRayImpl(RayHandler && func, uint32_t startRow, uint32_t pitch);
 
-  glm::vec3 RandomInUnitSphere();
-
   std::shared_ptr<ColorBuffer> m_buffer;
   uint32_t m_width = 0;
   uint32_t m_height = 0;

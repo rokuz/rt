@@ -4,32 +4,44 @@
 
 #include <glm/vec3.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace ray_tracing
 {
+class Material;
+
 struct Hit
 {
   float m_parameterT = 0.0f;
-  glm::vec3 m_position;
-  glm::vec3 m_normal;
+  glm::vec3 m_position = {};
+  glm::vec3 m_normal = {};
+  std::shared_ptr<Material> m_material;
 
   Hit() = default;
-  Hit(float t, glm::vec3 const & position, glm::vec3 const & normal)
+  Hit(float t, glm::vec3 const & position, glm::vec3 const & normal,
+      std::shared_ptr<Material> material)
     : m_parameterT(t)
     , m_position(position)
     , m_normal(normal)
+    , m_material(std::move(material))
   {}
 };
 
 class HitableObject
 {
 public:
-  HitableObject() = default;
+  explicit HitableObject(std::shared_ptr<Material> material)
+    : m_material(std::move(material))
+  {}
+
   virtual ~HitableObject() = default;
 
   // Returning vector must be sorted by m_parameterT.
   virtual std::vector<Hit> Trace(Ray const & ray, float tmin, float tmax) const = 0;
+
+protected:
+  std::shared_ptr<Material> m_material;
 };
 
 template <typename T>

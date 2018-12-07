@@ -11,9 +11,10 @@ namespace ray_tracing
 class Sphere : public HitableObject
 {
 public:
-  Sphere() = default;
-  Sphere(glm::vec3 const & center, float radius)
-    : m_center(center)
+  Sphere(glm::vec3 const & center, float radius,
+         std::shared_ptr<Material> material)
+    : HitableObject(std::move(material))
+    , m_center(center)
     , m_radius(radius)
   {}
 
@@ -23,7 +24,7 @@ public:
   std::vector<Hit> Trace(Ray const & ray, float tmin, float tmax) const override;
 
 private:
-  glm::vec3 m_center;
+  glm::vec3 m_center = {};
   float m_radius = 1.0f;
 };
 }  // namespace ray_tracing
