@@ -18,10 +18,10 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
 
   using namespace ray_tracing;
 
-  m_cameraPosition = glm::vec3(0.0f, 8.0f, -15.0f);
+  m_cameraPosition = glm::vec3(0.0f, 8.0f, -20.0f);
   m_cameraDirection = glm::vec3(0.0f, -1.0f, 2.0f);
 
-  m_samplesInRowCount = 3;
+  //m_samplesInRowCount = 10;
 
   std::uniform_int_distribution<> randomPos(-10, 10);
   std::uniform_real_distribution<float> randomFloat(0.0f, 1.0f);
@@ -32,8 +32,8 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
     auto const c = glm::vec3(randomFloat(m_generator), randomFloat(m_generator), randomFloat(m_generator));
 
     std::shared_ptr<Material> mat;
-    if (i >= 5)
-      mat = std::make_shared<material::Metal>(c, 0.0f * randomFloat(m_generator));
+    if (i >= 3)
+      mat = std::make_shared<material::Metal>(c, 0.1f * randomFloat(m_generator));
     else
       mat = std::make_shared<material::Matte>(c);
 
