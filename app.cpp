@@ -2,6 +2,8 @@
 
 #include "rendering/pipelinestate.hpp"
 
+#include <glm/geometric.hpp>
+
 #include <glfw/glfw3.h>
 
 bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
@@ -109,9 +111,9 @@ void App::UpdateTexture(std::vector<glm::vec3> const & buffer)
 {
   for (size_t i = 0; i < buffer.size(); ++i)
   {
-    (*m_byteBuffer)[i * 4 + 0] = static_cast<uint8_t>(255 * buffer[i].r);
-    (*m_byteBuffer)[i * 4 + 1] = static_cast<uint8_t>(255 * buffer[i].g);
-    (*m_byteBuffer)[i * 4 + 2] = static_cast<uint8_t>(255 * buffer[i].b);
+    (*m_byteBuffer)[i * 4 + 0] = static_cast<uint8_t>(255 * glm::clamp(buffer[i].r, 0.0f, 1.0f));
+    (*m_byteBuffer)[i * 4 + 1] = static_cast<uint8_t>(255 * glm::clamp(buffer[i].g, 0.0f, 1.0f));
+    (*m_byteBuffer)[i * 4 + 2] = static_cast<uint8_t>(255 * glm::clamp(buffer[i].b, 0.0f, 1.0f));
     (*m_byteBuffer)[i * 4 + 3] = 255;
   }
   m_texture->Update(m_byteBuffer->data(), static_cast<uint32_t>(m_byteBuffer->size()));
