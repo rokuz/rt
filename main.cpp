@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
   uint32_t width = 1024;
   uint32_t height = 768;
   uint32_t rtThreadsCount = 4;
-  uint32_t samplesInRow = 3;
+  uint32_t samplesInRow = 2;
   try
   {
     cxxopts::Options options(argv[0], " - simple C++ ray tracer");
@@ -61,7 +61,7 @@ int main(int argc, char * argv[])
         ("h,height", "Window height",
           cxxopts::value<uint32_t>(height)->default_value("768"))
         ("s,samples", "Supersampling samples in row count",
-          cxxopts::value<uint32_t>(samplesInRow)->default_value("3"))
+          cxxopts::value<uint32_t>(samplesInRow)->default_value("2"))
         ("t,threads", "Ray tracing threads count",
           cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"));
     options.parse(argc, argv);
@@ -141,7 +141,7 @@ int main(int argc, char * argv[])
     if (firstFrame)
     {
       firstFrame = false;
-      app.RayTrace();
+      app.RayTrace(false /* highQuality */);
     }
 
     glfwSwapBuffers(window);

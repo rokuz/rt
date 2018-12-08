@@ -3,6 +3,8 @@
 #include "ray_tracing/default_materials.hpp"
 #include "ray_tracing/directional_light.hpp"
 
+#include <set>
+
 namespace demo
 {
 PrettySpheres::PrettySpheres(uint32_t rayTracingThreadsCount)
@@ -18,28 +20,45 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
 
   using namespace ray_tracing;
 
-  m_cameraPosition = glm::vec3(0.0f, 8.0f, -20.0f);
-  m_cameraDirection = glm::vec3(0.0f, -1.0f, 2.0f);
+  m_cameraPosition = glm::vec3(0.0f, 3.0f, -10.0f);
+  m_cameraDirection = glm::vec3(0.0f, -1.0f, 2.25f);
 
-  //m_samplesInRowCount = 10;
-
-  std::uniform_int_distribution<> randomPos(-10, 10);
   std::uniform_real_distribution<float> randomFloat(0.0f, 1.0f);
-  for (size_t i = 0; i < 10; ++i)
+
+  std::set<std::pair<int, int>> s;
+  std::uniform_int_distribution<> randomPos(-5, 5);
+  auto geneneratePosition = [this, &s, &randomPos]()
   {
-    auto const x = static_cast<float>(randomPos(m_generator));
-    auto const z = static_cast<float>(randomPos(m_generator));
+    std::pair<int, int> p;
+    int i = 0;
+    do
+    {
+      p = std::make_pair(randomPos(m_generator), randomPos(m_generator));
+      ++i;
+    }
+    while (s.find(p) != s.end() && i < 5000);
+    s.insert(p);
+    return p;
+  };
+
+  for (size_t i = 0; i < 40; ++i)
+  {
+    auto const p = geneneratePosition();
     auto const c = glm::vec3(randomFloat(m_generator), randomFloat(m_generator), randomFloat(m_generator));
 
     std::shared_ptr<Material> mat;
-    if (i >= 5)
-      mat = std::make_shared<material::Metal>(c, glm::mix(0.1f, 0.2f, randomFloat(m_generator)));
-    else if (i >= 2)
-      mat = std::make_shared<material::Metal>(c);
+    if (i >= 15)
+    {
+      mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.3f, randomFloat(m_generator)),
+                                                 glm::mix(0.0f, 1.0f, randomFloat(m_generator)));
+    }
     else
+    {
       mat = std::make_shared<material::Matte>(c);
+    }
 
-    m_spheres.emplace_back(std::make_unique<Sphere>(glm::vec3(x, 0.0f, z), 1.0f, mat));
+    float const radius = glm::mix(0.25f, 0.5f, randomFloat(m_generator));
+    m_spheres.emplace_back(std::make_unique<Sphere>(glm::vec3(p.first, radius - 1.0f, p.second), radius, mat));
   }
   m_spheres.emplace_back(std::make_unique<Sphere>(
     glm::vec3(0.0, -1001.0f, 0.0), 1000.0f,
@@ -97,7 +116,7 @@ glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_traci
   auto const hits = HitObjects(scatterResult.m_scatteredRay, near, far);
   if (!hits.empty())
   {
-    auto const sc = c * RayTraceObjects(scatterResult.m_scatteredRay, hits[0], near, far, depth + 1);
+    auto const sc = RayTraceObjects(scatterResult.m_scatteredRay, hits[0], near, far, depth + 1);
     c = glm::mix(sc, c, 0.5f);
   }
   return c;

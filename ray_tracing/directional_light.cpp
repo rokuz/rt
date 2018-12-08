@@ -40,7 +40,7 @@ glm::vec3 DirectionalLight::GetSpecular(Ray const & ray, Hit const & hit)
 
   float spec = 1.0f;
   spec = glm::clamp(G * D * F, 0.0f, 1.0f);
-  return m_color * spec;
+  return glm::mix(m_color, hit.m_material->GetAlbedo(), 0.5f) * spec;
 }
 
 glm::vec3 DirectionalLight::TraceLightWithDepth(Hit const & hit, Tracer && tracer, int depth)

@@ -37,6 +37,9 @@ public:
   virtual bool InProgress() { return false; }
   virtual void CopyToBuffer(ColorBuffer & buffer) {}
 
+  uint32_t GetSamplesInRowCount() const { return m_samplesInRowCount; }
+  void SetSamplesInRowCount(uint32_t samplesInRowCount) { m_samplesInRowCount = samplesInRowCount; }
+
 protected:
   virtual glm::vec3 RayTrace(Ray const & ray, float near, float far) { return {}; }
 

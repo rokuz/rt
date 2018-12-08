@@ -23,6 +23,8 @@ public:
   };
 
   virtual ScatterResult Scatter(Ray const & ray, Hit const & hit) = 0;
+
+  virtual glm::vec3 GetAlbedo() const { return glm::vec3(0.0f, 0.0f, 0.0f); }
   virtual float GetRoughness() const { return 1.0f; }
   virtual float GetRefraction() const { return 0.0f; }
 };

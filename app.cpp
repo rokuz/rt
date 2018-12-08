@@ -6,11 +6,14 @@
 
 #include <glfw/glfw3.h>
 
+#include <algorithm>
+
 bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
                      uint32_t screenWidth, uint32_t screenHeight,
                      uint32_t samplesInRowCount)
 {
   m_frame = std::move(frame);
+  m_originalSamplesCount = samplesInRowCount;
 
   m_quad = rendering::BuildQuad();
   m_quadGpuProgram = rendering::BuildQuadGpuProgram();
@@ -68,7 +71,10 @@ void App::Render(double timeSinceStart, double elapsedTime)
     }
 
     if (m_frame->HasFinished())
+    {
       UpdateTexture(*m_buffer);
+      m_frame->SetSamplesInRowCount(m_originalSamplesCount);
+    }
   }
 
   if (m_quadGpuProgram->Use())
@@ -79,10 +85,14 @@ void App::Render(double timeSinceStart, double elapsedTime)
   CheckOpenGLErrors();
 }
 
-void App::RayTrace()
+void App::RayTrace(bool highQuality)
 {
   if (!m_frame || !m_frame->HasFinished())
     return;
+
+  m_originalSamplesCount = m_frame->GetSamplesInRowCount();
+  if (highQuality)
+    m_frame->SetSamplesInRowCount(std::max(m_originalSamplesCount, static_cast<uint32_t>(10)));
 
   for (auto & p : *m_buffer)
     p = glm::vec3(0.0, 0.0, 0.0);
@@ -98,7 +108,10 @@ void App::OnKeyButton(int key, int scancode, bool pressed)
   switch (key)
   {
   case GLFW_KEY_T:
-    RayTrace();
+    RayTrace(false /* highQuality */);
+    break;
+  case GLFW_KEY_Q:
+    RayTrace(true /* highQuality */);
     break;
   }
 }

@@ -22,7 +22,7 @@ public:
                   uint32_t samplesInRowCount);
   void Uninitialize();
   void Render(double timeSinceStart, double elapsedTime);
-  void RayTrace();
+  void RayTrace(bool highQuality);
 
   void OnKeyButton(int key, int scancode, bool pressed);
   void OnMouseButton(double xpos, double ypos, int button, bool pressed);
@@ -39,6 +39,7 @@ private:
   double m_lastUpdateRealtimeBuffer = 0.0;
   std::shared_ptr<std::vector<uint8_t>> m_byteBuffer;
   std::unique_ptr<ray_tracing::Frame> m_frame;
+  uint32_t m_originalSamplesCount = 1;
 
   std::unique_ptr<rendering::Mesh> m_quad;
   std::unique_ptr<rendering::GpuProgram> m_quadGpuProgram;
