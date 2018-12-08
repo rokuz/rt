@@ -8,6 +8,7 @@ Simple C++ ray tracing framework and demos.
 # Demos
 ## Pretty spheres
 ![Pretty spheres Demo](screenshots/pretty_spheres.png?raw=true "Pretty spheres Demo")
+![Pretty spheres Demo](screenshots/pretty_spheres2.png?raw=true "Pretty spheres Demo")
 Here we render a bunch of spheres with random color, roughness and refraction index.
 * Global illumination - scattering on the matte and reflective surfaces;
 * Directional light source - light (shadow) rays;

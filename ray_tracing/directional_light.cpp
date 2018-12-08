@@ -21,17 +21,15 @@ glm::vec3 DirectionalLight::GetSpecular(Ray const & ray, Hit const & hit)
   float const vdn = glm::clamp(glm::dot(-ray.Direction(), hit.m_normal), 0.0f, 1.0f);
   float const ndl = glm::clamp(glm::dot(hit.m_normal, -m_direction), 0.0f, 1.0f);
   auto const h = -glm::normalize(m_direction + ray.Direction());
-  float const ndh = glm::clamp(glm::dot(hit.m_normal, h), 0.0f, 1.0f);
+  float const ndh = glm::clamp(glm::dot(hit.m_normal, h), kEps, 1.0f);
   float const vdh = glm::clamp(glm::dot(-ray.Direction(), h), 0.0f, 1.0f);
 
   float const G = (fabs(vdh) >= kEps) ? std::min(1.0f, 2.0f * ndh * std::min(vdn, ndl) / vdh) : 1.0f;
   float const ndh2 = ndh * ndh;
 
-  float D = 1.0f;
   float const roughness = std::max(hit.m_material->GetRoughness(), 0.03f);
   float const r2 = roughness * roughness;
-  if (fabs(roughness) >= kEps && fabs(ndh2) >= kEps)
-    D = exp((ndh2 - 1.0f) / (r2 * ndh2)) / (4.0f * r2 * ndh2 * ndh2);
+  float D = exp((ndh2 - 1.0f) / (r2 * ndh2)) / (4.0f * r2 * ndh2 * ndh2);
 
   float const ref = hit.m_material->GetRefraction();
   float const f0 = (1.0f - ref) / (1.0f + ref);

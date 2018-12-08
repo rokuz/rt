@@ -23,6 +23,8 @@ Material::ScatterResult Metal::Scatter(Ray const & ray, Hit const & hit)
   ScatterResult result;
   result.m_attenuation = m_albedo;
   result.m_scatteredRay = Ray(hit.m_position, reflectVector);
+  if (glm::dot(hit.m_normal, reflectVector) <= 0.0f)
+    result.m_energyImpact = 0.0f;
   return result;
 }
 }  // namespace material

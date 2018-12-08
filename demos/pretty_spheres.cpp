@@ -110,14 +110,14 @@ glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_traci
     lightColor /= m_lightSources.size();
 
   auto c = lightColor * scatterResult.m_attenuation;
-  if (depth >= 5)
+  if (depth >= 5 || fabs(scatterResult.m_energyImpact) < kEps)
     return c;
 
   auto const hits = HitObjects(scatterResult.m_scatteredRay, near, far);
   if (!hits.empty())
   {
     auto const sc = RayTraceObjects(scatterResult.m_scatteredRay, hits[0], near, far, depth + 1);
-    c = glm::mix(sc, c, 0.5f);
+    c = glm::mix(sc, c, scatterResult.m_energyImpact);
   }
   return c;
 }
