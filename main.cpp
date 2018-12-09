@@ -2,6 +2,7 @@
 #include "global.hpp"
 
 #include "demos/pretty_spheres.hpp"
+#include "demos/glass_spheres.hpp"
 
 #include "rendering/pipelinestate.hpp"
 
@@ -9,6 +10,7 @@
 
 #include <cxxopts.hpp>
 
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -50,6 +52,7 @@ int main(int argc, char * argv[])
   uint32_t height = 768;
   uint32_t rtThreadsCount = 4;
   uint32_t samplesInRow = 2;
+  uint32_t demoIndex = 1;
   try
   {
     cxxopts::Options options(argv[0], " - simple C++ ray tracer");
@@ -63,12 +66,25 @@ int main(int argc, char * argv[])
         ("s,samples", "Supersampling samples in row count",
           cxxopts::value<uint32_t>(samplesInRow)->default_value("2"))
         ("t,threads", "Ray tracing threads count",
-          cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"));
+          cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"))
+        ("d,demo", "Demo index",
+          cxxopts::value<uint32_t>(demoIndex)->default_value("1"));
     options.parse(argc, argv);
   }
   catch (const cxxopts::OptionException& e)
   {
     std::cout << "Error parsing options: " << e.what() << std::endl;
+    return 1;
+  }
+
+  std::vector<std::unique_ptr<ray_tracing::Frame>> frames;
+  frames.emplace_back(std::make_unique<demo::PrettySpheres>(rtThreadsCount));
+  frames.emplace_back(std::make_unique<demo::GlassSpheres>(rtThreadsCount));
+
+  demoIndex = std::max(static_cast<uint32_t>(1), demoIndex);
+  if (demoIndex > frames.size())
+  {
+    std::cout << "Incorrect demo index." << std::endl;
     return 1;
   }
 
@@ -86,7 +102,8 @@ int main(int argc, char * argv[])
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_SAMPLES, 0);
 
-  GLFWwindow * window = glfwCreateWindow(width, height, "rt", nullptr, nullptr);
+  GLFWwindow * window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height),
+                                         "rt", nullptr, nullptr);
   if (!window)
   {
     glfwTerminate();
@@ -118,10 +135,7 @@ int main(int argc, char * argv[])
 
   rendering::PipelineStateManager::Instance().Initialize();
 
-  std::unique_ptr<ray_tracing::Frame> frame = nullptr;
-  frame = std::make_unique<demo::PrettySpheres>(rtThreadsCount);
-
-  if (!app.Initialize(std::move(frame), width, height, samplesInRow))
+  if (!app.Initialize(std::move(frames[demoIndex - 1]), width, height, samplesInRow))
   {
     app.Uninitialize();
     glfwTerminate();

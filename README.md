@@ -6,13 +6,15 @@ Simple C++ ray tracing framework and demos.
 * Supersampling support.
 
 # Demos
-## Pretty spheres
+## 1. Pretty spheres
 ![Pretty spheres Demo](screenshots/pretty_spheres.png?raw=true "Pretty spheres Demo")
-![Pretty spheres Demo](screenshots/pretty_spheres2.png?raw=true "Pretty spheres Demo")
 Here we render a bunch of spheres with random color, roughness and refraction index.
 * Global illumination - scattering on the matte and reflective surfaces;
 * Directional light source - light (shadow) rays;
 * Specularity - Cook-Torrance approximation.
+## 2. Glass spheres
+![Glass spheres Demo](screenshots/glass_spheres.png?raw=true "Glass spheres Demo")
+Everything as in Pretty spheres demo + refraction on glass surfaces.
 
 ## Command line arguments
 -w - window's width (default = 1024);
@@ -21,7 +23,9 @@ Here we render a bunch of spheres with random color, roughness and refraction in
 
 -s - supersampling samples (in row) count (default = 2, 2x2 samples here);
 
--t - ray tracing threads count (default = 4).
+-t - ray tracing threads count (default = 4);
+
+-d - demo index (default = 1).
 ## Controls
 * Esc - exit;
 * T - rerender scene;

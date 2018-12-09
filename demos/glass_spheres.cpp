@@ -1,4 +1,4 @@
-#include "pretty_spheres.hpp"
+#include "glass_spheres.hpp"
 #include "palette.hpp"
 
 #include "ray_tracing/default_materials.hpp"
@@ -8,21 +8,21 @@
 
 namespace demo
 {
-PrettySpheres::PrettySpheres(uint32_t rayTracingThreadsCount)
+GlassSpheres::GlassSpheres(uint32_t rayTracingThreadsCount)
   : ray_tracing::MultiThreadedFrame(rayTracingThreadsCount)
 {}
 
-bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
-                               uint32_t width, uint32_t height,
-                               uint32_t samplesInRowCount)
+bool GlassSpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
+                              uint32_t width, uint32_t height,
+                              uint32_t samplesInRowCount)
 {
   if (!MultiThreadedFrame::Initialize(buffer, width, height, samplesInRowCount))
     return false;
 
   using namespace ray_tracing;
 
-  m_cameraPosition = glm::vec3(0.0f, 3.0f, -10.0f);
-  m_cameraDirection = glm::vec3(0.0f, -1.0f, 2.25f);
+  m_cameraPosition = glm::vec3(0.0f, 2.0f, -10.0f);
+  m_cameraDirection = glm::vec3(0.0f, -1.0f, 3.0f);
 
   std::uniform_real_distribution<float> randomFloat(0.0f, 1.0f);
 
@@ -47,23 +47,13 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
     auto const p = geneneratePosition();
     auto const c = Palette::RandomFromAll(m_generator);
 
-    std::shared_ptr<Material> mat;
-    if (i >= 15)
-    {
-      mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.3f, randomFloat(m_generator)),
-                                                 glm::mix(0.0f, 1.0f, randomFloat(m_generator)));
-    }
-    else
-    {
-      mat = std::make_shared<material::Matte>(c);
-    }
-
+    auto mat = std::make_shared<material::Glass>(c, glm::mix(0.7f, 0.9f, randomFloat(m_generator)));
     float const radius = glm::mix(0.25f, 0.5f, randomFloat(m_generator));
     m_spheres.emplace_back(std::make_unique<Sphere>(glm::vec3(p.first, radius - 1.0f, p.second), radius, mat));
   }
   m_spheres.emplace_back(std::make_unique<Sphere>(
     glm::vec3(0.0, -1001.0f, 0.0), 1000.0f,
-    std::make_shared<material::Matte>(glm::vec3(0.75f, 0.75f, 0.75f))));
+    std::make_shared<material::Matte>(glm::vec3(0.15f, 0.15f, 0.15f))));
 
   m_lightSources.emplace_back(std::make_unique<DirectionalLight>(
     glm::normalize(glm::vec3(-0.4f, -1.0f, 0.6f)),
@@ -72,19 +62,19 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
   return true;
 }
 
-std::vector<ray_tracing::Hit> PrettySpheres::HitObjects(ray_tracing::Ray const & ray,
-                                                        float near, float far) const
+std::vector<ray_tracing::Hit> GlassSpheres::HitObjects(ray_tracing::Ray const & ray,
+                                                       float near, float far) const
 {
   return ray_tracing::TraceHitableCollection(m_spheres, ray, near, far);
 }
 
-glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray, float near, float far)
+glm::vec3 GlassSpheres::RayTrace(ray_tracing::Ray const & ray, float near, float far)
 {
   using namespace std::placeholders;
 
   auto const hits = HitObjects(ray, near, far);
   if (hits.empty())
-    return glm::vec3(1.0f, 1.0f, 1.0f);
+    return glm::vec3(0.1f, 0.1f, 0.1f);
 
   auto const diffuseColor = RayTraceObjects(ray, hits[0], 0.001f, far, 1);
 
@@ -97,8 +87,8 @@ glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray, float near, floa
   return diffuseColor + specularColor;
 }
 
-glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_tracing::Hit const & hit,
-                                         float near, float far, int depth)
+glm::vec3 GlassSpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_tracing::Hit const & hit,
+                                        float near, float far, int depth)
 {
   using namespace std::placeholders;
 
@@ -106,7 +96,7 @@ glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_traci
 
   glm::vec3 lightColor = glm::vec3(0.0f, 0.0f, 0.0f);
   for (auto const & source : m_lightSources)
-    lightColor += source->TraceLight(ray, hit, std::bind(&PrettySpheres::HitObjects, this, _1, _2, _3));
+    lightColor += source->TraceLight(ray, hit, std::bind(&GlassSpheres::HitObjects, this, _1, _2, _3));
   if (!m_lightSources.empty())
     lightColor /= m_lightSources.size();
 
