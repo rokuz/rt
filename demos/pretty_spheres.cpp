@@ -73,20 +73,20 @@ bool PrettySpheres::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
 }
 
 std::vector<ray_tracing::Hit> PrettySpheres::HitObjects(ray_tracing::Ray const & ray,
-                                                        float near, float far) const
+                                                        float znear, float zfar) const
 {
-  return ray_tracing::TraceHitableCollection(m_spheres, ray, near, far);
+  return ray_tracing::TraceHitableCollection(m_spheres, ray, znear, zfar);
 }
 
-glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray, float near, float far)
+glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray, float znear, float zfar)
 {
   using namespace std::placeholders;
 
-  auto const hits = HitObjects(ray, near, far);
+  auto const hits = HitObjects(ray, znear, zfar);
   if (hits.empty())
     return glm::vec3(1.0f, 1.0f, 1.0f);
 
-  auto const diffuseColor = RayTraceObjects(ray, hits[0], 0.001f, far, 1);
+  auto const diffuseColor = RayTraceObjects(ray, hits[0], 0.001f, zfar, 1);
 
   glm::vec3 specularColor = glm::vec3(0.0f, 0.0f, 0.0f);
   for (auto const & source : m_lightSources)
@@ -98,7 +98,7 @@ glm::vec3 PrettySpheres::RayTrace(ray_tracing::Ray const & ray, float near, floa
 }
 
 glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_tracing::Hit const & hit,
-                                         float near, float far, int depth)
+                                         float znear, float zfar, int depth)
 {
   using namespace std::placeholders;
 
@@ -114,10 +114,10 @@ glm::vec3 PrettySpheres::RayTraceObjects(ray_tracing::Ray const & ray, ray_traci
   if (depth >= 5 || fabs(scatterResult.m_energyImpact) < kEps)
     return c;
 
-  auto const hits = HitObjects(scatterResult.m_scatteredRay, near, far);
+  auto const hits = HitObjects(scatterResult.m_scatteredRay, znear, zfar);
   if (!hits.empty())
   {
-    auto const sc = RayTraceObjects(scatterResult.m_scatteredRay, hits[0], near, far, depth + 1);
+    auto const sc = RayTraceObjects(scatterResult.m_scatteredRay, hits[0], znear, zfar, depth + 1);
     c = glm::mix(lightColor * sc, c, scatterResult.m_energyImpact);
   }
   return c;

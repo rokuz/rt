@@ -1,10 +1,14 @@
 #include "app.hpp"
 #include "global.hpp"
 
-#include "demos/pretty_spheres.hpp"
 #include "demos/glass_spheres.hpp"
+#include "demos/pretty_spheres.hpp"
 
 #include "rendering/pipelinestate.hpp"
+
+#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+#include "rt_cuda/rt_cuda.h"
+#endif
 
 #include <glfw/glfw3.h>
 
@@ -56,22 +60,17 @@ int main(int argc, char * argv[])
   try
   {
     cxxopts::Options options(argv[0], " - simple C++ ray tracer");
-    options
-      .allow_unrecognised_options()
-      .add_options()
-        ("w,width", "Window width",
-          cxxopts::value<uint32_t>(width)->default_value("1024"))
-        ("h,height", "Window height",
-          cxxopts::value<uint32_t>(height)->default_value("768"))
-        ("s,samples", "Supersampling samples in row count",
-          cxxopts::value<uint32_t>(samplesInRow)->default_value("2"))
-        ("t,threads", "Ray tracing threads count",
-          cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"))
-        ("d,demo", "Demo index",
-          cxxopts::value<uint32_t>(demoIndex)->default_value("1"));
+    options.allow_unrecognised_options().add_options()(
+        "w,width", "Window width", cxxopts::value<uint32_t>(width)->default_value("1024"))(
+        "h,height", "Window height", cxxopts::value<uint32_t>(height)->default_value("768"))(
+        "s,samples", "Supersampling samples in row count",
+        cxxopts::value<uint32_t>(samplesInRow)->default_value("2"))(
+        "t,threads", "Ray tracing threads count",
+        cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"))(
+        "d,demo", "Demo index", cxxopts::value<uint32_t>(demoIndex)->default_value("1"));
     options.parse(argc, argv);
   }
-  catch (const cxxopts::OptionException& e)
+  catch (cxxopts::OptionException const & e)
   {
     std::cout << "Error parsing options: " << e.what() << std::endl;
     return 1;
@@ -102,8 +101,8 @@ int main(int argc, char * argv[])
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_SAMPLES, 0);
 
-  GLFWwindow * window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height),
-                                         "rt", nullptr, nullptr);
+  GLFWwindow * window =
+      glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), "rt", nullptr, nullptr);
   if (!window)
   {
     glfwTerminate();
@@ -131,6 +130,9 @@ int main(int argc, char * argv[])
     glfwTerminate();
     return 1;
   }
+
+  if (!ray_tracing_cuda::Initialize())
+    return 1;
 #endif
 
   rendering::PipelineStateManager::Instance().Initialize();

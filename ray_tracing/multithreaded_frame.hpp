@@ -19,9 +19,6 @@
 
 namespace ray_tracing
 {
-using ColorBuffer = std::vector<glm::vec3>;
-using RayHandler = std::function<glm::vec3(Ray const & ray)>;
-
 class MultiThreadedFrame : public Frame
 {
 public:

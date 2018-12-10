@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(gl3w)
 
 set(SOURCE_LIB
-  gl3w.c
+  gl3w.cpp
   gl3w.h 
   glcorearb.h 
   glext.h 

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
+if (WIN32)
+project(rt LANGUAGES CXX CUDA)
+else()
 project(rt)
+endif()
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -16,6 +20,7 @@ add_subdirectory(3party/glm)
 
 if (WIN32)
 add_subdirectory(3party/gl3w)
+add_subdirectory(rt_cuda)
 endif (WIN32)
 
 find_package(OpenGL REQUIRED)
@@ -30,6 +35,7 @@ include_directories(3party/cxxopts/include)
 
 if (WIN32)
 include_directories(3party/gl3w)
+include_directories(rt_cuda)
 endif (WIN32)
 
 if (APPLE)
@@ -48,7 +54,12 @@ add_executable(${PROJECT_NAME}
                ${SRC_LIST_RAY_TRACING}
                ${SRC_LIST_DEMOS})
 
+if (WIN32)
+set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+endif (WIN32)
+
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} glfw)
 if (WIN32)
 target_link_libraries(${PROJECT_NAME} gl3w)
+target_link_libraries(${PROJECT_NAME} rt_cuda)
 endif (WIN32)
