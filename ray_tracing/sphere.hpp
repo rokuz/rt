@@ -22,6 +22,7 @@ public:
   float GetRadius() const { return m_radius; }
 
   std::vector<Hit> Trace(Ray const & ray, float tmin, float tmax) const override;
+  std::optional<Hit> TraceNearest(Ray const & ray, float tmin, float tmax) const override;
 
 private:
   glm::vec3 m_center = {};

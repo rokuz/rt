@@ -1,8 +1,9 @@
 #pragma once
 
-#include "ray.hpp"
-
 #include "global.hpp"
+#include "hitable_object.hpp"
+#include "light.hpp"
+#include "ray.hpp"
 
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
@@ -23,7 +24,7 @@ using RayHandler = std::function<glm::vec3(Ray const & ray)>;
 class Frame
 {
 public:
-  Frame();
+  Frame() = default;
   virtual ~Frame() = default;
 
   virtual bool Initialize(std::shared_ptr<ColorBuffer> buffer,
@@ -37,8 +38,16 @@ public:
   virtual bool InProgress() { return false; }
   virtual void CopyToBuffer(ColorBuffer & buffer) {}
 
+  virtual void AddObject(std::unique_ptr<ray_tracing::HitableObject> && object) {}
+  virtual void AddLightSource(std::unique_ptr<ray_tracing::Light> && light) {}
+
   uint32_t GetSamplesInRowCount() const { return m_samplesInRowCount; }
   void SetSamplesInRowCount(uint32_t samplesInRowCount) { m_samplesInRowCount = samplesInRowCount; }
+
+  void SetBackgroundColor(glm::vec3 const & color) { m_backgroundColor = color; }
+
+  void SetCameraPosition(glm::vec3 const & pos);
+  void SetCameraDirection(glm::vec3 const & dir);
 
 protected:
   virtual glm::vec3 RayTrace(Ray const & ray, float near, float far) { return {}; }
@@ -54,8 +63,7 @@ protected:
   uint32_t m_height = 0;
   uint32_t m_samplesInRowCount = 1;
 
-  std::random_device m_random;
-  std::mt19937 m_generator;
+  glm::vec3 m_backgroundColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
   glm::vec3 m_cameraPosition = glm::vec3(0.0f, 0.0f, 0.0f);
   glm::vec3 m_cameraDirection = glm::vec3(0.0f, 0.0f, 1.0f);

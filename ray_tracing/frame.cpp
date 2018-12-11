@@ -2,10 +2,6 @@
 
 namespace ray_tracing
 {
-Frame::Frame()
-  : m_generator(m_random())
-{}
-
 bool Frame::Initialize(std::shared_ptr<ColorBuffer> buffer,
                        uint32_t width, uint32_t height,
                        uint32_t samplesInRowCount)
@@ -27,7 +23,6 @@ void Frame::TraceAllRays()
 
 void Frame::ForEachRay(RayHandler && func)
 {
-  m_cameraDirection = glm::normalize(m_cameraDirection);
   ForEachRayImpl(std::move(func), 0, 1);
 }
 
@@ -74,5 +69,15 @@ void Frame::ForEachRayImpl(RayHandler && func, uint32_t startRow, uint32_t pitch
 
     OnEndRow(y);
   }
+}
+
+void Frame::SetCameraPosition(glm::vec3 const & pos)
+{
+  m_cameraPosition = pos;
+}
+
+void Frame::SetCameraDirection(glm::vec3 const & dir)
+{
+  m_cameraDirection = glm::normalize(dir);
 }
 }  // namespace ray_tracing

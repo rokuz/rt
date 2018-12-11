@@ -98,8 +98,6 @@ void MultiThreadedFrame::CopyToBuffer(ColorBuffer & buffer)
 
 void MultiThreadedFrame::ForEachRay(RayHandler && func)
 {
-  m_cameraDirection = glm::normalize(m_cameraDirection);
-
   std::lock_guard<std::mutex> lock(m_mutex);
   m_traceFinishingCounter = 0;
   m_needTrace = true;

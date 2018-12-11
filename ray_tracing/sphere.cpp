@@ -60,4 +60,24 @@ std::vector<Hit> Sphere::Trace(Ray const & ray, float tmin, float tmax) const
   auto const n2 = glm::normalize(p2 - m_center);
   return {Hit(nt1, p1, n1, m_material), Hit(nt2, p2, n2, m_material)};
 }
+
+std::optional<Hit> Sphere::TraceNearest(Ray const & ray, float tmin, float tmax) const
+{
+  auto const d = ray.Origin() - m_center;
+  auto const a = glm::dot(ray.Direction(), ray.Direction());
+  auto const b = 2.0f * glm::dot(d, ray.Direction());
+  auto const c = glm::dot(d, d) - m_radius * m_radius;
+  auto const discriminant = b * b - 4 * a * c;
+  if (discriminant < 0.0f)
+    return {};
+
+  auto const sqrtD = sqrt(discriminant);
+  auto const t = std::min((-b - sqrtD) / (2.0f * a), (-b + sqrtD) / (2.0f * a));
+  if (t < tmin || t > tmax)
+    return {};
+
+  auto const p = ray.PointAt(t);
+  auto const n = glm::normalize(p - m_center);
+  return Hit(t, p, n, m_material);
+}
 }  // namespace ray_tracing

@@ -8,11 +8,14 @@
 
 #include <algorithm>
 
-bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
+bool App::Initialize(std::unique_ptr<demo::Demo> && demo,
                      uint32_t screenWidth, uint32_t screenHeight,
                      uint32_t samplesInRowCount)
 {
-  m_frame = std::move(frame);
+  m_demo = std::move(demo);
+  if (!m_demo)
+    return false;
+
   m_originalSamplesCount = samplesInRowCount;
 
   m_quad = rendering::BuildQuad();
@@ -26,8 +29,8 @@ bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
   m_realtimeBuffer.resize(m_screenWidth * m_screenHeight);
   m_byteBuffer = std::make_shared<std::vector<uint8_t>>(m_screenWidth * m_screenHeight * 4, 0);
 
-  if (m_frame)
-    m_frame->Initialize(m_buffer, m_screenWidth, m_screenHeight, samplesInRowCount);
+  if (!m_demo->Initialize(m_buffer, m_screenWidth, m_screenHeight, samplesInRowCount))
+    return false;
 
   m_texture = std::make_shared<rendering::Texture>();
   m_texture->Init(GL_RGBA8, m_byteBuffer->data(), static_cast<uint32_t>(m_byteBuffer->size()),
@@ -47,8 +50,7 @@ bool App::Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
 
 void App::Uninitialize()
 {
-  if (m_frame)
-    m_frame->Uninitialize();
+  m_demo->GetFrame()->Uninitialize();
 
   assert(m_texture.use_count() == 1);
   m_texture.reset();
@@ -58,25 +60,21 @@ void App::Uninitialize()
 
 void App::Render(double timeSinceStart, double elapsedTime)
 {
-  if (m_frame)
+  // Update realtime buffer to show progress.
+  float constexpr kUpdatePeriodSec = 0.25;
+  m_lastUpdateRealtimeBuffer += elapsedTime;
+  if (m_demo->GetFrame()->InProgress() && m_lastUpdateRealtimeBuffer >= kUpdatePeriodSec)
   {
-    // Update realtime buffer to show progress.
-    float constexpr kUpdatePeriodSec = 0.25;
-    m_lastUpdateRealtimeBuffer += elapsedTime;
-    if (m_frame->InProgress() && m_lastUpdateRealtimeBuffer >= kUpdatePeriodSec)
-    {
-      m_lastUpdateRealtimeBuffer -= kUpdatePeriodSec;
-      m_frame->CopyToBuffer(m_realtimeBuffer);
-      UpdateTexture(m_realtimeBuffer);
-    }
-
-    if (m_frame->HasFinished())
-    {
-      UpdateTexture(*m_buffer);
-      m_frame->SetSamplesInRowCount(m_originalSamplesCount);
-    }
+    m_lastUpdateRealtimeBuffer -= kUpdatePeriodSec;
+    m_demo->GetFrame()->CopyToBuffer(m_realtimeBuffer);
+    UpdateTexture(m_realtimeBuffer);
   }
 
+  if (m_demo->GetFrame()->HasFinished())
+  {
+    UpdateTexture(*m_buffer);
+    m_demo->GetFrame()->SetSamplesInRowCount(m_originalSamplesCount);
+  }
   if (m_quadGpuProgram->Use())
   {
     m_quadGpuProgram->SetTexture<rendering::QuadUniforms>(Quad::uTexture, m_texture);
@@ -87,12 +85,15 @@ void App::Render(double timeSinceStart, double elapsedTime)
 
 void App::RayTrace(bool highQuality)
 {
-  if (!m_frame || !m_frame->HasFinished())
+  if (!m_demo->GetFrame()->HasFinished())
     return;
 
-  m_originalSamplesCount = m_frame->GetSamplesInRowCount();
+  m_originalSamplesCount = m_demo->GetFrame()->GetSamplesInRowCount();
   if (highQuality)
-    m_frame->SetSamplesInRowCount(std::max(m_originalSamplesCount, static_cast<uint32_t>(10)));
+  {
+    m_demo->GetFrame()->SetSamplesInRowCount(
+        std::max(m_originalSamplesCount, static_cast<uint32_t>(10)));
+  }
 
   for (auto & p : *m_buffer)
     p = glm::vec3(0.0, 0.0, 0.0);
@@ -100,7 +101,7 @@ void App::RayTrace(bool highQuality)
   UpdateTexture(*m_buffer);
   m_lastUpdateRealtimeBuffer = 0.0;
 
-  m_frame->TraceAllRays();
+  m_demo->GetFrame()->TraceAllRays();
 }
 
 void App::OnKeyButton(int key, int scancode, bool pressed)

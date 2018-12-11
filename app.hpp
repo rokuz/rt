@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ray_tracing/frame.hpp"
+#include "demos/demo.hpp"
 
 #include "rendering/gpuprogram.hpp"
 #include "rendering/mesh.hpp"
@@ -17,7 +17,7 @@ class App
 public:
   App() = default;
 
-  bool Initialize(std::unique_ptr<ray_tracing::Frame> && frame,
+  bool Initialize(std::unique_ptr<demo::Demo> && demo,
                   uint32_t screenWidth, uint32_t screenHeight,
                   uint32_t samplesInRowCount);
   void Uninitialize();
@@ -32,13 +32,13 @@ private:
   void UpdateTexture(std::vector<glm::vec3> const & buffer);
   void CheckOpenGLErrors();
 
+  std::unique_ptr<demo::Demo> m_demo;
   uint32_t m_screenWidth = 0;
   uint32_t m_screenHeight = 0;
   std::shared_ptr<ray_tracing::ColorBuffer> m_buffer;
   ray_tracing::ColorBuffer m_realtimeBuffer;
   double m_lastUpdateRealtimeBuffer = 0.0;
   std::shared_ptr<std::vector<uint8_t>> m_byteBuffer;
-  std::unique_ptr<ray_tracing::Frame> m_frame;
   uint32_t m_originalSamplesCount = 1;
 
   std::unique_ptr<rendering::Mesh> m_quad;

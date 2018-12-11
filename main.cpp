@@ -1,6 +1,8 @@
 #include "app.hpp"
 #include "global.hpp"
 
+#include "demos/demo.hpp"
+#include "demos/demo_frame_cpu.hpp"
 #include "demos/glass_spheres.hpp"
 #include "demos/pretty_spheres.hpp"
 
@@ -76,12 +78,19 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  std::vector<std::unique_ptr<ray_tracing::Frame>> frames;
-  frames.emplace_back(std::make_unique<demo::PrettySpheres>(rtThreadsCount));
-  frames.emplace_back(std::make_unique<demo::GlassSpheres>(rtThreadsCount));
+  std::vector<std::unique_ptr<demo::Demo>> demosCpu;
+  {
+    demosCpu.emplace_back(std::make_unique<demo::PrettySpheres>(
+      std::make_unique<demo::DemoFrameCPU>(rtThreadsCount)));
+
+    demosCpu.emplace_back(std::make_unique<demo::GlassSpheres>(
+      std::make_unique<demo::DemoFrameCPU>(rtThreadsCount)));
+  }
+
+  std::vector<std::unique_ptr<demo::Demo>> * demos = &demosCpu;
 
   demoIndex = std::max(static_cast<uint32_t>(1), demoIndex);
-  if (demoIndex > frames.size())
+  if (demoIndex > demosCpu.size())
   {
     std::cout << "Incorrect demo index." << std::endl;
     return 1;
@@ -137,7 +146,7 @@ int main(int argc, char * argv[])
 
   rendering::PipelineStateManager::Instance().Initialize();
 
-  if (!app.Initialize(std::move(frames[demoIndex - 1]), width, height, samplesInRow))
+  if (!app.Initialize(std::move((*demos)[demoIndex - 1]), width, height, samplesInRow))
   {
     app.Uninitialize();
     glfwTerminate();

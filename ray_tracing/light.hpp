@@ -5,6 +5,7 @@
 #include <glm/vec3.hpp>
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 namespace ray_tracing
@@ -12,7 +13,7 @@ namespace ray_tracing
 class Light
 {
 public:
-  using Tracer = std::function<std::vector<Hit>(Ray const & ray, float tmin, float tmax)>;
+  using Tracer = std::function<std::optional<Hit>(Ray const & ray, float tmin, float tmax)>;
 
   virtual ~Light() = default;
 
