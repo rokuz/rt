@@ -7,6 +7,7 @@ find_package(CUDA REQUIRED)
 
 include_directories(..)
 include_directories(../3party/glm)
+include_directories(../3party/cuda-workshop/cutil/inc)
 include_directories(${CUDA_INCLUDE_DIRS})
 
 set(SOURCE_LIB

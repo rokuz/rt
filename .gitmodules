@@ -7,3 +7,6 @@
 [submodule "3party/cxxopts"]
 	path = 3party/cxxopts
 	url = git@github.com:jarro2783/cxxopts.git
+[submodule "3party/cuda-workshop"]
+	path = 3party/cuda-workshop
+	url = git@github.com:kashif/cuda-workshop.git

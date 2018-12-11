@@ -27,8 +27,6 @@ public:
 private:
   uint32_t FindMaterial(std::shared_ptr<ray_tracing::Material> mat);
 
-  std::vector<float3> m_output;
-
   // These collections must be immutable during ray tracing.
   std::vector<CudaSphere> m_spheres;
   std::vector<CudaMaterial> m_materials;
