@@ -7,6 +7,8 @@ find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
 set(SOURCE_LIB
+    demo_frame_cuda.cpp
+    demo_frame_cuda.hpp
 	rt_cuda.cu
 	rt_cuda.h
 )

@@ -15,7 +15,10 @@ public:
     , m_color(color)
   {}
 
-  uint32_t GetType() const override { return kLightSourceDirectionalType; }
+  uint8_t GetType() const override { return kLightSourceDirectionalType; }
+
+  glm::vec3 const & GetDirection() const { return m_direction; }
+  glm::vec3 const & GetColor() const { return m_color; }
 
   glm::vec3 TraceLight(Ray const & ray, Hit const & hit, Tracer && tracer) override;
   glm::vec3 GetSpecular(Ray const & ray, Hit const & hit) override;

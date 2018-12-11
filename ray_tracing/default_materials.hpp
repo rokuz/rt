@@ -16,7 +16,7 @@ public:
     : m_albedo(albedo)
   {}
 
-  uint32_t GetType() const override { return kMaterialMatteType; }
+  uint8_t GetType() const override { return kMaterialMatteType; }
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
   glm::vec3 GetAlbedo() const override { return m_albedo; }
@@ -34,7 +34,7 @@ public:
     , m_refraction(refraction)
   {}
 
-  uint32_t GetType() const override { return kMaterialMetalType; }
+  uint8_t GetType() const override { return kMaterialMetalType; }
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
 
@@ -56,7 +56,7 @@ public:
     , m_refraction(refraction)
   {}
 
-  uint32_t GetType() const override { return kMaterialGlassType; }
+  uint8_t GetType() const override { return kMaterialGlassType; }
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
 

@@ -35,4 +35,15 @@ bool Initialize()
 
   return true;
 }
+
+void RayTrace(CudaSphere * spheres, uint32_t spheresCount,
+              CudaMaterial * materials, uint32_t materialsCount,
+              CudaLight * lightSources, uint32_t lightSourcesCount,
+              uint32_t samplesInRowCount, float3 backgroundColor,
+              float3 cameraPosition, float3 cameraDirection,
+              float fov, float znear, float zfar,
+              uint32_t width, uint32_t height, float3 & output)
+{
+
+}
 }  // namespace ray_tracing_cuda

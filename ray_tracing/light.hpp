@@ -17,7 +17,7 @@ public:
 
   virtual ~Light() = default;
 
-  virtual uint32_t GetType() const = 0;
+  virtual uint8_t GetType() const = 0;
 
   virtual glm::vec3 TraceLight(Ray const & ray, Hit const & hit, Tracer && tracer) = 0;
   virtual glm::vec3 GetSpecular(Ray const & ray, Hit const & hit) = 0;

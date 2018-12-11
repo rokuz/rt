@@ -38,7 +38,9 @@ public:
 
   virtual ~HitableObject() = default;
 
-  virtual uint32_t GetType() const = 0;
+  virtual uint8_t GetType() const = 0;
+
+  std::shared_ptr<Material> GetMaterial() const { return m_material; }
 
   // Returning vector must be sorted by m_parameterT.
   virtual std::vector<Hit> Trace(Ray const & ray, float tmin, float tmax) const = 0;

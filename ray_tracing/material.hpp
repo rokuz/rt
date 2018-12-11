@@ -17,7 +17,7 @@ public:
     float m_energyImpact = 0.5f;
   };
 
-  virtual uint32_t GetType() const = 0;
+  virtual uint8_t GetType() const = 0;
 
   virtual ScatterResult Scatter(Ray const & ray, Hit const & hit) = 0;
 
