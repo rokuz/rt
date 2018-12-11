@@ -8,14 +8,14 @@
 
 #include <vector>
 
-namespace demo
+namespace ray_tracing_cuda
 {
 class DemoFrameCUDA : public ray_tracing::Frame
 {
 public:
   DemoFrameCUDA() = default;
 
-  bool Initialize(std::shared_ptr<ColorBuffer> buffer,
+  bool Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
                   uint32_t width, uint32_t height,
                   uint32_t samplesInRowCount) override;
 
@@ -25,13 +25,13 @@ public:
   void AddLightSource(std::unique_ptr<ray_tracing::Light> && light) override;
 
 private:
-  uint32_t FindMaterial(std::shared_ptr<Material> mat);
+  uint32_t FindMaterial(std::shared_ptr<ray_tracing::Material> mat);
 
   std::vector<float3> m_output;
 
   // These collections must be immutable during ray tracing.
-  std::vector<ray_tracing_cuda::CudaSphere> m_spheres;
-  std::vector<ray_tracing_cuda::CudaMaterial> m_materials;
-  std::vector<ray_tracing_cuda::CudaLight> m_lightSources;
+  std::vector<CudaSphere> m_spheres;
+  std::vector<CudaMaterial> m_materials;
+  std::vector<CudaLight> m_lightSources;
 };
-}  // namespace demo
+}  // namespace ray_tracing_cuda

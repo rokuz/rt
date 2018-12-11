@@ -5,16 +5,16 @@
 #include "ray_tracing/sphere.hpp"
 #include "ray_tracing/types.hpp"
 
+#include "vector_functions.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstring>
 
-namespace demo
+namespace ray_tracing_cuda
 {
-float constexpr kEps = 1e-5;
-
-bool DemoFrameCUDA::Initialize(std::shared_ptr<ColorBuffer> buffer,
+bool DemoFrameCUDA::Initialize(std::shared_ptr<ray_tracing::ColorBuffer> buffer,
                                uint32_t width, uint32_t height,
                                uint32_t samplesInRowCount)
 {
@@ -28,16 +28,17 @@ bool DemoFrameCUDA::Initialize(std::shared_ptr<ColorBuffer> buffer,
 void DemoFrameCUDA::TraceAllRays()
 {
   auto bgColor = make_float3(m_backgroundColor.x, m_backgroundColor.y, m_backgroundColor.z);
-  auto cp = make_float3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-  auto cd = make_float3(cameraDirection.x, cameraDirection.y, cameraDirection.z);
+  auto cp = make_float3(m_cameraPosition.x, m_cameraPosition.y, m_cameraPosition.z);
+  auto cd = make_float3(m_cameraPosition.x, m_cameraPosition.y, m_cameraPosition.z);
 
+  float3 * o = m_output.data();
   ray_tracing_cuda::RayTrace(m_spheres.data(), static_cast<uint32_t>(m_spheres.size()),
                              m_materials.data(), static_cast<uint32_t>(m_materials.size()),
                              m_lightSources.data(), static_cast<uint32_t>(m_lightSources.size()),
                              m_samplesInRowCount, bgColor, cp, cd, m_fov, m_znear, m_zfar,
-                             m_width, m_height, m_output.data());
+                             m_width, m_height, o);
 
-  memcpy(m_buffer->data(), m_output.data(), m_output.data() * sizeof(float3))
+  memcpy(m_buffer->data(), m_output.data(), m_output.size() * sizeof(float3));
 }
 
 void DemoFrameCUDA::AddObject(std::unique_ptr<ray_tracing::HitableObject> && object)
@@ -50,34 +51,34 @@ void DemoFrameCUDA::AddObject(std::unique_ptr<ray_tracing::HitableObject> && obj
     auto const r = ptr->GetRadius();
 
     ray_tracing_cuda::CudaSphere s;
-    s.m_materialIndex = FindMaterial(ptr->GetMaterial());
-    s.m_position = make_float3(c.x, c.y, c.z);
+    s.m_materialIndex = make_uint1(FindMaterial(ptr->GetMaterial()));
+    s.m_center = make_float3(c.x, c.y, c.z);
     s.m_radius = r;
 
-    m_objects.push_back(std::move(s));
+    m_spheres.push_back(std::move(s));
   }
 }
 
-uint32_t DemoFrameCUDA::FindMaterial(std::shared_ptr<Material> mat)
+uint32_t DemoFrameCUDA::FindMaterial(std::shared_ptr<ray_tracing::Material> mat)
 {
   auto const aldebo = mat->GetAlbedo();
   auto const roughness = mat->GetRoughness();
   auto const refraction = mat->GetRefraction();
 
   auto it = std::find_if(m_materials.begin(), m_materials.end(),
-    [&aldebo, &roughness, &refraction](ray_tracing_cuda::Material const & m)
+    [&aldebo, &roughness, &refraction](ray_tracing_cuda::CudaMaterial const & m)
   {
-    return fabs(m.m_albedo.x - aldebo.x) < kEps &&
-           fabs(m.m_albedo.y - aldebo.y) < kEps &&
-           fabs(m.m_albedo.z - aldebo.z) < kEps &&
-           fabs(m.m_roughness - roughness.z) < kEps &&
-           fabs(m.m_refraction - refraction.z) < kEps;
+    return fabs(m.m_albedo.x - aldebo.x) < ray_tracing::kEps &&
+           fabs(m.m_albedo.y - aldebo.y) < ray_tracing::kEps &&
+           fabs(m.m_albedo.z - aldebo.z) < ray_tracing::kEps &&
+           fabs(m.m_roughness - roughness) < ray_tracing::kEps &&
+           fabs(m.m_refraction - refraction) < ray_tracing::kEps;
   });
   if (it != m_materials.end())
-    return std::distance(m_materials.begin(), it);
+    return static_cast<uint32_t>(std::distance(m_materials.begin(), it));
 
   ray_tracing_cuda::CudaMaterial cm;
-  cm.m_materialType = mat->GetType();
+  cm.m_materialType = make_uchar1(mat->GetType());
   cm.m_albedo = make_float3(aldebo.x, aldebo.y, aldebo.z);
   cm.m_roughness = roughness;
   cm.m_refraction = refraction;
@@ -95,10 +96,10 @@ void DemoFrameCUDA::AddLightSource(std::unique_ptr<ray_tracing::Light> && light)
     auto const d = ptr->GetDirection();
 
     ray_tracing_cuda::CudaLight l;
-    l.m_lightType = light->GetType();
+    l.m_lightType = make_uchar1(light->GetType());
     l.m_direction = make_float3(d.x, d.y, d.z);
     l.m_color = make_float3(c.x, c.y, c.z);
     m_lightSources.push_back(std::move(l));
   }
 }
-}  // namespace demo
+}  // namespace ray_tracing_cuda

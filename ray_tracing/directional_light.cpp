@@ -1,6 +1,6 @@
 #include "directional_light.hpp"
 #include "default_materials.hpp"
-#include "global.hpp"
+#include "types.hpp"
 
 #include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>

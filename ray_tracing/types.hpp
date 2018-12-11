@@ -1,7 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
 namespace ray_tracing
 {
+float constexpr kPi = static_cast<float>(3.14159265358979323846);
+
+float constexpr kEps = 1e-5f;
+
 // Hitable objects.
 uint8_t constexpr kHitableObjectSphereType = 0;
 

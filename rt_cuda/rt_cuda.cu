@@ -42,7 +42,7 @@ void RayTrace(CudaSphere * spheres, uint32_t spheresCount,
               uint32_t samplesInRowCount, float3 backgroundColor,
               float3 cameraPosition, float3 cameraDirection,
               float fov, float znear, float zfar,
-              uint32_t width, uint32_t height, float3 & output)
+              uint32_t width, uint32_t height, float3 *& output)
 {
 
 }

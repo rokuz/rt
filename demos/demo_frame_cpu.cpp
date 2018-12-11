@@ -53,7 +53,7 @@ glm::vec3 DemoFrameCPU::RayTraceObjects(ray_tracing::Ray const & ray,
     lightColor /= m_lightSources.size();
 
   auto c = lightColor * scatterResult.m_attenuation;
-  if (depth >= 5 || fabs(scatterResult.m_energyImpact) < kEps)
+  if (depth >= 5 || fabs(scatterResult.m_energyImpact) < ray_tracing::kEps)
     return c;
 
   auto const h = HitObjects(scatterResult.m_scatteredRay, znear, zfar);

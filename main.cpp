@@ -8,7 +8,8 @@
 
 #include "rendering/pipelinestate.hpp"
 
-#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+#if (defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)) && defined(ENABLE_CUDA)
+#include "rt_cuda/demo_frame_cuda.hpp"
 #include "rt_cuda/rt_cuda.h"
 #endif
 
@@ -59,6 +60,7 @@ int main(int argc, char * argv[])
   uint32_t rtThreadsCount = 4;
   uint32_t samplesInRow = 2;
   uint32_t demoIndex = 1;
+  bool enableCUDA = true;
   try
   {
     cxxopts::Options options(argv[0], " - simple C++ ray tracer");
@@ -69,7 +71,9 @@ int main(int argc, char * argv[])
         cxxopts::value<uint32_t>(samplesInRow)->default_value("2"))(
         "t,threads", "Ray tracing threads count",
         cxxopts::value<uint32_t>(rtThreadsCount)->default_value("4"))(
-        "d,demo", "Demo index", cxxopts::value<uint32_t>(demoIndex)->default_value("1"));
+        "d,demo", "Demo index", cxxopts::value<uint32_t>(demoIndex)->default_value("1"))(
+        "c,cuda", "Enable CUDA acceleration",
+        cxxopts::value<bool>(enableCUDA)->default_value("true"));
     options.parse(argc, argv);
   }
   catch (cxxopts::OptionException const & e)
@@ -86,8 +90,21 @@ int main(int argc, char * argv[])
     demosCpu.emplace_back(std::make_unique<demo::GlassSpheres>(
       std::make_unique<demo::DemoFrameCPU>(rtThreadsCount)));
   }
-
   std::vector<std::unique_ptr<demo::Demo>> * demos = &demosCpu;
+
+#if (defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)) && \
+     defined(ENABLE_CUDA)
+  std::vector<std::unique_ptr<demo::Demo>> demosGpu;
+  {
+    demosGpu.emplace_back(std::make_unique<demo::PrettySpheres>(
+        std::make_unique<ray_tracing_cuda::DemoFrameCUDA>()));
+
+    demosGpu.emplace_back(std::make_unique<demo::GlassSpheres>(
+        std::make_unique<ray_tracing_cuda::DemoFrameCUDA>()));
+  }
+  if (enableCUDA)
+    demos = &demosGpu;
+#endif
 
   demoIndex = std::max(static_cast<uint32_t>(1), demoIndex);
   if (demoIndex > demosCpu.size())
@@ -140,8 +157,10 @@ int main(int argc, char * argv[])
     return 1;
   }
 
+#if defined(ENABLE_CUDA)
   if (!ray_tracing_cuda::Initialize())
     return 1;
+#endif
 #endif
 
   rendering::PipelineStateManager::Instance().Initialize();

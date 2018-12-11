@@ -1,9 +1,9 @@
 #pragma once
 
-#include "global.hpp"
 #include "hitable_object.hpp"
 #include "light.hpp"
 #include "ray.hpp"
+#include "types.hpp"
 
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>

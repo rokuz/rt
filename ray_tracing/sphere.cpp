@@ -1,6 +1,5 @@
 #include "sphere.hpp"
-
-#include "global.hpp"
+#include "types.hpp"
 
 #include <glm/geometric.hpp>
 

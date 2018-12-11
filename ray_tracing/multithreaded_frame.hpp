@@ -2,8 +2,6 @@
 
 #include "frame.hpp"
 
-#include "global.hpp"
-
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
 
