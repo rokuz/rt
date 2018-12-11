@@ -38,6 +38,8 @@ public:
 
   virtual ~HitableObject() = default;
 
+  virtual uint32_t GetType() const = 0;
+
   // Returning vector must be sorted by m_parameterT.
   virtual std::vector<Hit> Trace(Ray const & ray, float tmin, float tmax) const = 0;
   virtual std::optional<Hit> TraceNearest(Ray const & ray, float tmin, float tmax) const = 0;

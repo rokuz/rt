@@ -17,6 +17,8 @@ public:
     float m_energyImpact = 0.5f;
   };
 
+  virtual uint32_t GetType() const = 0;
+
   virtual ScatterResult Scatter(Ray const & ray, Hit const & hit) = 0;
 
   virtual glm::vec3 GetAlbedo() const { return glm::vec3(0.0f, 0.0f, 0.0f); }

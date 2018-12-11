@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hitable_object.hpp"
+#include "types.hpp"
 
 #include <glm/vec3.hpp>
 
@@ -17,6 +18,8 @@ public:
     , m_center(center)
     , m_radius(radius)
   {}
+
+  uint32_t GetType() const override { return kHitableObjectSphereType; }
 
   glm::vec3 const GetCenter() const { return m_center; }
   float GetRadius() const { return m_radius; }

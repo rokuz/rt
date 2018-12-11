@@ -1,6 +1,7 @@
 #pragma once
 
 #include "material.hpp"
+#include "types.hpp"
 
 #include <glm/vec3.hpp>
 
@@ -14,6 +15,8 @@ public:
   explicit Matte(glm::vec3 const & albedo)
     : m_albedo(albedo)
   {}
+
+  uint32_t GetType() const override { return kMaterialMatteType; }
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
   glm::vec3 GetAlbedo() const override { return m_albedo; }
@@ -30,6 +33,8 @@ public:
     , m_roughness(roughness)
     , m_refraction(refraction)
   {}
+
+  uint32_t GetType() const override { return kMaterialMetalType; }
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
 
@@ -50,6 +55,8 @@ public:
     : m_albedo(albedo)
     , m_refraction(refraction)
   {}
+
+  uint32_t GetType() const override { return kMaterialGlassType; }
 
   ScatterResult Scatter(Ray const & ray, Hit const & hit) override;
 

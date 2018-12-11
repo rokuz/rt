@@ -1,6 +1,7 @@
 #pragma once
 
 #include "light.hpp"
+#include "types.hpp"
 
 #include <glm/vec3.hpp>
 
@@ -13,6 +14,8 @@ public:
     : m_direction(direction)
     , m_color(color)
   {}
+
+  uint32_t GetType() const override { return kLightSourceDirectionalType; }
 
   glm::vec3 TraceLight(Ray const & ray, Hit const & hit, Tracer && tracer) override;
   glm::vec3 GetSpecular(Ray const & ray, Hit const & hit) override;
