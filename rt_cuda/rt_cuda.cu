@@ -2,15 +2,16 @@
 
 #include "cuda.h"
 #include "cuda_runtime.h"
-#include "device_launch_parameters.h"
 #include "cutil_math.h"
+#include "device_launch_parameters.h"
 
 #include <cassert>
 #include <iostream>
+#include <vector>
 
 namespace ray_tracing_cuda
 {
-uint32_t constexpr kMaxSamplesInRow = 32;
+uint32_t constexpr kThreadsInRow = 8;
 
 bool Initialize()
 {
@@ -40,31 +41,50 @@ bool Initialize()
   return true;
 }
 
-template<typename T>
+std::vector<void *> asyncFreeMemory;
+
+template <typename T>
 class GPUPtr
 {
 public:
-  explicit GPUPtr(uint32_t size) 
-    : m_size(size)
+  explicit GPUPtr(uint32_t size, bool asyncFree = true) : m_size(size), m_asyncFree(asyncFree)
   {
     if (cudaMalloc(&m_ptr, m_size) != cudaSuccess)
       m_ptr = nullptr;
+
+    if (m_asyncFree && m_ptr != nullptr)
+      asyncFreeMemory.push_back(m_ptr);
   }
 
-  ~GPUPtr() 
-  { 
-    if (m_ptr != nullptr)
+  ~GPUPtr()
+  {
+    if (!m_asyncFree && m_ptr != nullptr)
       cudaFree(m_ptr);
   }
 
-  operator bool()
-  {
-    return m_ptr != nullptr;
-  }
+  operator bool() { return m_ptr != nullptr; }
 
   T * m_ptr = nullptr;
   uint32_t m_size;
+  bool m_asyncFree;
 };
+
+struct TransferredGPUPtr
+{
+  void * m_ptr = nullptr;
+  uint32_t m_size = 0;
+
+  TransferredGPUPtr() = default;
+  TransferredGPUPtr(void * ptr, uint32_t size) : m_ptr(ptr), m_size(size) {}
+
+  template<typename T>
+  void Set(GPUPtr<T> const & ptr)
+  {
+    m_ptr = ptr.m_ptr;
+    m_size = ptr.m_size;
+  }
+};
+TransferredGPUPtr transferredOutputPtr;
 
 __device__ bool hitSphere(CudaSphere * sphere, CudaRay * ray, float tmin, float tmax, CudaHit * hit)
 {
@@ -80,7 +100,7 @@ __device__ bool hitSphere(CudaSphere * sphere, CudaRay * ray, float tmin, float 
   auto const t = min((-b - sqrtD) / (2.0f * a), (-b + sqrtD) / (2.0f * a));
   if (t < tmin || t > tmax)
     return false;
-  
+
   hit->m_parameterT = t;
   hit->m_position = ray->m_origin + ray->m_direction * t;
   hit->m_normal = normalize(hit->m_position - sphere->m_center);
@@ -88,55 +108,72 @@ __device__ bool hitSphere(CudaSphere * sphere, CudaRay * ray, float tmin, float 
   return true;
 }
 
-__global__ void RayTraceGPU(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial * materials,
-                            uint32_t materialsCount, CudaLight * lightSources,
-                            uint32_t lightSourcesCount, float3 backgroundColor, 
-                            float3 origin, float3 forward, float3 up, float3 right, float2 halfScreenSize, 
-                            float2 cellSize, float invSampleCount, float znear, float zfar, float3 * output)
+__device__ void TraceRayGPU(CudaRay * ray, CudaSphere * spheres, uint32_t spheresCount,
+                            CudaMaterial * materials, uint32_t materialsCount,
+                            CudaLight * lightSources, uint32_t lightSourcesCount,
+                            float3 backgroundColor, float znear, float zfar, float3 * output)
 {
-  __shared__ float3 samples[kMaxSamplesInRow][kMaxSamplesInRow];
+  CudaHit hit;
+  hit.m_parameterT = zfar + 1.0f;
+  bool hitFound = false;
+  for (uint32_t i = 0; i < spheresCount; ++i)
+  {
+    CudaHit h;
+    if (hitSphere(&spheres[i], ray, znear, zfar, &h))
+    {
+      hitFound = true;
+      if (h.m_parameterT < hit.m_parameterT)
+        hit = h;
+    }
+  }
+
+  if (hitFound)
+    *output = materials[hit.m_materialIndex].m_albedo;
+  else
+    *output = backgroundColor;
+}
+
+__global__ void TraceAllRaysGPU(CudaSphere * spheres, uint32_t spheresCount,
+                                CudaMaterial * materials, uint32_t materialsCount,
+                                CudaLight * lightSources, uint32_t lightSourcesCount,
+                                float3 backgroundColor, float3 origin, float3 forward, float3 up,
+                                float3 right, float2 halfScreenSize, float2 cellSize,
+                                uint32_t samplesInRowCount, float invSampleCount, float znear,
+                                float zfar, float3 * output)
+{
+  __shared__ float3 samples[kThreadsInRow][kThreadsInRow];
   int x = blockIdx.x;
   int y = blockIdx.y;
-  int offset = x + y * gridDim.x;
 
-  if (threadIdx.x < blockDim.x && threadIdx.y < blockDim.y)
+  samples[threadIdx.x][threadIdx.y] = make_float3(0.0f, 0.0f, 0.0f);
+  int tx = threadIdx.x;
+  while (tx < samplesInRowCount)
   {
-    float const dx = (2.0f * x / gridDim.x - 1.0f) * halfScreenSize.x;
-    float const sdx = dx + cellSize.x * threadIdx.x / blockDim.x;
-    float const dy = (-2.0f * y / gridDim.y + 1.0f) * halfScreenSize.y;
-    float const sdy = dy - cellSize.y * threadIdx.y / blockDim.y;
-
-    CudaRay ray;
-    ray.m_origin = origin;
-    ray.m_direction = normalize(forward * znear + up * sdy + right * sdx);
-
-    CudaHit hit;
-    hit.m_parameterT = zfar + 1.0f;
-    bool hitFound = false;
-    for (uint32_t i = 0; i < spheresCount; ++i)
+    int ty = threadIdx.y;
+    while (ty < samplesInRowCount)
     {
-      CudaHit h;
-      if (hitSphere(&spheres[i], &ray, znear, zfar, &h))
-      {
-        hitFound = true;
-        if (h.m_parameterT < hit.m_parameterT)
-          hit = h;
-      }
-    }
+      float const dx = (2.0f * x / gridDim.x - 1.0f) * halfScreenSize.x;
+      float const sdx = dx + cellSize.x * tx / samplesInRowCount;
+      float const dy = (-2.0f * y / gridDim.y + 1.0f) * halfScreenSize.y;
+      float const sdy = dy - cellSize.y * ty / samplesInRowCount;
 
-    if (hitFound)
-      samples[threadIdx.x][threadIdx.y] = materials[hit.m_materialIndex].m_albedo;
-    else
-      samples[threadIdx.x][threadIdx.y] = backgroundColor;
-  }
-  else
-  {
-    samples[threadIdx.x][threadIdx.y] = make_float3(0.0f, 0.0f, 0.0f);
+      CudaRay ray;
+      ray.m_origin = origin;
+      ray.m_direction = normalize(forward * znear + up * sdy + right * sdx);
+
+      float3 outputColor;
+      TraceRayGPU(&ray, spheres, spheresCount, materials, materialsCount, lightSources,
+                  lightSourcesCount, backgroundColor, znear, zfar, &outputColor);
+      samples[threadIdx.x][threadIdx.y] += outputColor;
+
+      ty += blockDim.y;
+    }
+    tx += blockDim.x;
   }
 
   // Samples reduction.
   __syncthreads();
-  int j = kMaxSamplesInRow / 2;
+  int j = kThreadsInRow / 2;
   while (j != 0)
   {
     if (threadIdx.x < j && threadIdx.x + j < blockDim.x)
@@ -149,66 +186,70 @@ __global__ void RayTraceGPU(CudaSphere * spheres, uint32_t spheresCount, CudaMat
     j /= 2;
   }
 
+  int offset = x + y * gridDim.x;
   if (threadIdx.x == 0 && threadIdx.y == 0)
     output[offset] = samples[0][0] * invSampleCount;
 }
 
-void RayTrace(CudaSphere * spheres, uint32_t spheresCount,
-              CudaMaterial * materials, uint32_t materialsCount,
-              CudaLight * lightSources, uint32_t lightSourcesCount,
-              uint32_t samplesInRowCount, float3 backgroundColor,
-              float3 cameraPosition, float3 cameraDirection,
-              float fov, float znear, float zfar,
-              uint32_t width, uint32_t height, float * output)
+cudaEvent_t RayTrace(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial * materials,
+                     uint32_t materialsCount, CudaLight * lightSources, uint32_t lightSourcesCount,
+                     uint32_t samplesInRowCount, float3 backgroundColor, float3 cameraPosition,
+                     float3 cameraDirection, float fov, float znear, float zfar, uint32_t width,
+                     uint32_t height)
 {
-  if (samplesInRowCount > kMaxSamplesInRow)
-    samplesInRowCount = kMaxSamplesInRow;
+  cudaEvent_t completion;
+  if (cudaEventCreate(&completion) != cudaSuccess)
+  {
+    std::cout << "Error call cudaEventCreate." << std::endl;
+    return nullptr;
+  }
 
   GPUPtr<CudaSphere> spheresGPU(spheresCount * sizeof(CudaSphere));
   if (!spheresGPU)
   {
     std::cout << "Error allocate GPU memory." << std::endl;
-    return;
+    return completion;
   }
-  if (cudaMemcpy(spheresGPU.m_ptr, spheres, spheresGPU.m_size, cudaMemcpyHostToDevice) != 
+  if (cudaMemcpyAsync(spheresGPU.m_ptr, spheres, spheresGPU.m_size, cudaMemcpyHostToDevice) !=
       cudaSuccess)
   {
-    std::cout << "Error call cudaMemcpy." << std::endl;
-    return;
+    std::cout << "Error call cudaMemcpyAsync (spheresGPU)." << std::endl;
+    return completion;
   }
 
   GPUPtr<CudaMaterial> materialsGPU(materialsCount * sizeof(CudaMaterial));
   if (!materialsGPU)
   {
     std::cout << "Error allocate GPU memory." << std::endl;
-    return;
+    return completion;
   }
-  if (cudaMemcpy(materialsGPU.m_ptr, materials, materialsGPU.m_size, cudaMemcpyHostToDevice) !=
+  if (cudaMemcpyAsync(materialsGPU.m_ptr, materials, materialsGPU.m_size, cudaMemcpyHostToDevice) !=
       cudaSuccess)
   {
-    std::cout << "Error call cudaMemcpy." << std::endl;
-    return;
+    std::cout << "Error call cudaMemcpyAsync (materialsGPU)." << std::endl;
+    return completion;
   }
 
   GPUPtr<CudaLight> lightSourcesGPU(lightSourcesCount * sizeof(CudaLight));
   if (!lightSourcesGPU)
   {
     std::cout << "Error allocate GPU memory." << std::endl;
-    return;
+    return completion;
   }
-  if (cudaMemcpy(lightSourcesGPU.m_ptr, lightSources, lightSourcesGPU.m_size, cudaMemcpyHostToDevice) !=
-      cudaSuccess)
+  if (cudaMemcpyAsync(lightSourcesGPU.m_ptr, lightSources, lightSourcesGPU.m_size,
+                      cudaMemcpyHostToDevice) != cudaSuccess)
   {
-    std::cout << "Error call cudaMemcpy." << std::endl;
-    return;
+    std::cout << "Error call cudaMemcpyAsync (lightSourcesGPU)." << std::endl;
+    return completion;
   }
 
   GPUPtr<float3> outputGPU(width * height * sizeof(float3));
-  if (!output)
+  if (!outputGPU)
   {
     std::cout << "Error allocate GPU memory." << std::endl;
-    return;
+    return completion;
   }
+  transferredOutputPtr.Set(outputGPU);
 
   static float3 kUp = make_float3(0.0f, 1.0f, 0.0f);
   auto const aspect = static_cast<float>(height) / width;
@@ -223,28 +264,62 @@ void RayTrace(CudaSphere * spheres, uint32_t spheresCount,
 
   dim3 grids(width, height);
   dim3 threads(samplesInRowCount, samplesInRowCount);
-  RayTraceGPU<<<grids, threads>>>(spheresGPU.m_ptr, spheresCount, materialsGPU.m_ptr, materialsCount,
-                                  lightSourcesGPU.m_ptr, lightSourcesCount, backgroundColor, 
-                                  cameraPosition, cameraDirection, up, right, halfScreenSize, cellSize, 
-                                  invSampleCount, znear, zfar, outputGPU.m_ptr);
+  TraceAllRaysGPU<<<grids, kThreadsInRow>>>(
+      spheresGPU.m_ptr, spheresCount, materialsGPU.m_ptr, materialsCount, lightSourcesGPU.m_ptr,
+      lightSourcesCount, backgroundColor, cameraPosition, cameraDirection, up, right,
+      halfScreenSize, cellSize, samplesInRowCount, invSampleCount, znear, zfar, outputGPU.m_ptr);
 
   auto err = cudaGetLastError();
   if (err != cudaSuccess)
   {
     std::cout << "Error CUDA: " << cudaGetErrorString(err) << std::endl;
-    return;
+    return completion;
   }
 
+  if (cudaEventRecord(completion, 0) != cudaSuccess)
+  {
+    std::cout << "Error call cudaEventRecord." << std::endl;
+    return completion;
+  }
+
+  return completion;
+}
+
+bool IsInProgress(cudaEvent_t completion)
+{
+  if (cudaEventQuery(completion) != cudaErrorNotReady)
+  {
+    auto err = cudaGetLastError();
+    if (err != cudaSuccess)
+    {
+      std::cout << "Error CUDA: " << cudaGetErrorString(err) << std::endl;
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+void FinishRayTrace(float * output, cudaEvent_t completion)
+{
+  if (cudaMemcpy(output, transferredOutputPtr.m_ptr, transferredOutputPtr.m_size,
+                 cudaMemcpyDeviceToHost) != cudaSuccess)
+  {
+    std::cout << "Error call cudaMemcpy (output)." << std::endl;
+  }
+    
   if (cudaDeviceSynchronize() != cudaSuccess)
-  {
     std::cout << "Error call cudaDeviceSynchronize." << std::endl;
-    return;
-  }
 
-  if (cudaMemcpy(output, outputGPU.m_ptr, outputGPU.m_size, cudaMemcpyDeviceToHost) != cudaSuccess)
-  {
-    std::cout << "Error call cudaMemcpy." << std::endl;
-    return;
-  }
+  auto err = cudaGetLastError();
+  if (err != cudaSuccess)
+    std::cout << "Error CUDA: " << cudaGetErrorString(err) << std::endl;
+
+  for (size_t i = 0; i < asyncFreeMemory.size(); ++i)
+    cudaFree(asyncFreeMemory[i]);
+  asyncFreeMemory.clear();
+
+  if (cudaEventDestroy(completion) != cudaSuccess)
+    std::cout << "Error call cudaEventDestroy." << std::endl;
 }
 }  // namespace ray_tracing_cuda

@@ -30,11 +30,12 @@ void DemoFrameCUDA::TraceAllRays()
   auto const cp = make_float3(m_cameraPosition.x, m_cameraPosition.y, m_cameraPosition.z);
   auto const cd = make_float3(m_cameraDirection.x, m_cameraDirection.y, m_cameraDirection.z);
 
-  ray_tracing_cuda::RayTrace(m_spheres.data(), static_cast<uint32_t>(m_spheres.size()),
-                             m_materials.data(), static_cast<uint32_t>(m_materials.size()),
-                             m_lightSources.data(), static_cast<uint32_t>(m_lightSources.size()),
-                             m_samplesInRowCount, bgColor, cp, cd, m_fov, m_znear, m_zfar, m_width,
-                             m_height, reinterpret_cast<float *>(m_buffer->data()));
+  assert(m_completionEvent == nullptr);
+  m_completionEvent = ray_tracing_cuda::RayTrace(m_spheres.data(), static_cast<uint32_t>(m_spheres.size()),
+                                                 m_materials.data(), static_cast<uint32_t>(m_materials.size()),
+                                                 m_lightSources.data(), static_cast<uint32_t>(m_lightSources.size()),
+                                                 m_samplesInRowCount, bgColor, cp, cd, m_fov, m_znear, m_zfar, m_width,
+                                                 m_height);
 }
 
 void DemoFrameCUDA::AddObject(std::unique_ptr<ray_tracing::HitableObject> && object)
@@ -97,5 +98,30 @@ void DemoFrameCUDA::AddLightSource(std::unique_ptr<ray_tracing::Light> && light)
     l.m_color = make_float3(c.x, c.y, c.z);
     m_lightSources.push_back(std::move(l));
   }
+}
+
+bool DemoFrameCUDA::HasFinished()
+{
+  if (m_completionEvent == nullptr)
+    return true;
+
+  if (!ray_tracing_cuda::IsInProgress(m_completionEvent))
+  {
+    ray_tracing_cuda::FinishRayTrace(reinterpret_cast<float *>(m_buffer->data()), m_completionEvent);
+    m_completionEvent = nullptr;
+    return true;
+  }
+
+  return false;
+}
+
+void DemoFrameCUDA::CopyToBuffer(ray_tracing::ColorBuffer & buffer)
+{
+  memset(buffer.data(), 0, buffer.size() * sizeof(glm::vec3));
+}
+
+bool DemoFrameCUDA::InProgress()
+{
+  return m_completionEvent != nullptr;
 }
 }  // namespace ray_tracing_cuda

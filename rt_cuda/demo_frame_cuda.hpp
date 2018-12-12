@@ -21,11 +21,17 @@ public:
 
   void TraceAllRays() override;
 
+  bool HasFinished() override;
+  bool InProgress() override;
+  void CopyToBuffer(ray_tracing::ColorBuffer & buffer) override;
+
   void AddObject(std::unique_ptr<ray_tracing::HitableObject> && object) override;
   void AddLightSource(std::unique_ptr<ray_tracing::Light> && light) override;
 
 private:
   uint32_t FindMaterial(std::shared_ptr<ray_tracing::Material> mat);
+
+  cudaEvent_t m_completionEvent = nullptr;
 
   // These collections must be immutable during ray tracing.
   std::vector<CudaSphere> m_spheres;
