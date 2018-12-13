@@ -6,6 +6,7 @@
 #include "ray_tracing/types.hpp"
 
 #include <cstdint>
+#include <functional>
 
 namespace ray_tracing_cuda
 {
@@ -50,9 +51,9 @@ struct CudaHit
 extern cudaEvent_t RayTrace(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial * materials,
                             uint32_t materialsCount, CudaLight * lightSources, uint32_t lightSourcesCount,
                             uint32_t samplesInRowCount, float3 backgroundColor, float3 cameraPosition,
-                            float3 cameraDirection, float fov, float znear, float zfar, uint32_t width,
-                            uint32_t height);
-
-extern bool IsInProgress(cudaEvent_t completion);
+                            float3 cameraDirection, float fov, float znear, float zfar, 
+                            uint32_t width, uint32_t height, std::function<bool()> && realtimeHandler);
+extern bool InProgress(cudaEvent_t completion);
+extern void CopyOutputToBuffer(float * buffer);
 extern void FinishRayTrace(float * output, cudaEvent_t completion);
 }  // namespace ray_tracing_cuda

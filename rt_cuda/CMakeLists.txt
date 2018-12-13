@@ -4,6 +4,7 @@ project(rt_cuda LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(CUDA REQUIRED)
+set(CUDA_COMPILE_TIME_EXTRA_FLAGS -g -G)
 
 include_directories(..)
 include_directories(../3party/glm)
