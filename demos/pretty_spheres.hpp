@@ -30,8 +30,10 @@ public:
 
     using namespace ray_tracing;
 
-    m_frame->SetCameraPosition(glm::vec3(0.0f, 3.0f, -10.0f));
-    m_frame->SetCameraDirection(glm::vec3(0.0f, -1.0f, 2.25f));
+    m_frame->SetCameraPosition(glm::vec3(7.5f, 1.0f, -7.5f));
+    m_frame->SetCameraDirection(glm::vec3(-2.0f, -0.5f, 2.0f));
+
+    m_frame->SetBackgroundColor(glm::vec3(0.9f, 0.9f, 0.9f));
 
     std::random_device random;
     std::mt19937 generator(random());
@@ -61,8 +63,8 @@ public:
       std::shared_ptr<Material> mat;
       if (i >= 15)
       {
-        mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.3f, randomFloat(generator)),
-                                                glm::mix(0.0f, 1.0f, randomFloat(generator)));
+        mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.1f, randomFloat(generator)),
+                                                glm::mix(0.5f, 0.9f, randomFloat(generator)));
       }
       else
       {
@@ -74,7 +76,7 @@ public:
     }
     m_frame->AddObject(std::make_unique<Sphere>(
       glm::vec3(0.0, -1001.0f, 0.0), 1000.0f,
-      std::make_shared<material::Matte>(glm::vec3(0.75f, 0.75f, 0.75f))));
+      std::make_shared<material::Matte>(glm::vec3(0.65f, 0.65f, 0.65f))));
 
     m_frame->AddLightSource(std::make_unique<DirectionalLight>(
       glm::normalize(glm::vec3(-0.4f, -1.0f, 0.6f)),

@@ -25,7 +25,10 @@ Everything as in Pretty spheres demo + refraction on glass surfaces.
 
 -t - ray tracing threads count (default = 4);
 
--d - demo index (default = 1).
+-d - demo index (default = 1);
+
+-c - enable CUDA acceleration (only Windows supported).
+
 ## Controls
 * Esc - exit;
 * T - rerender scene;
@@ -37,6 +40,7 @@ Everything as in Pretty spheres demo + refraction on glass surfaces.
 
 # Requirements
 * CMake 3.12+;
+* CUDA compatible device (for Windows with CUDA_ENABLE flag in CMake, tested on CUDA 10.0);
 * OpenGL 4.1 support.
 
 # License
