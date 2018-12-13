@@ -1,17 +1,71 @@
 #include "rt_cuda.h"
+#include "rt_functions.h"
 
+// CUDA headers.
 #include "cuda.h"
 #include "cuda_runtime.h"
+#include "curand_kernel.h"
 #include "cutil_math.h"
 #include "device_launch_parameters.h"
 
 #include <cassert>
+#include <ctime>
 #include <iostream>
 #include <vector>
 
 namespace ray_tracing_cuda
 {
-uint32_t constexpr kThreadsInRow = 16;
+namespace
+{
+uint32_t constexpr kThreadsInRow = 8;
+
+std::vector<void *> delayedFreeMemory;
+
+template<typename T>
+class GPUPtr
+{
+public:
+  explicit GPUPtr(uint32_t size, bool delayedFree = false)
+    : m_size(size * sizeof(T)), m_delayedFree(delayedFree)
+  {
+    if (cudaMalloc(&m_ptr, m_size) != cudaSuccess)
+      m_ptr = nullptr;
+
+    if (m_delayedFree && m_ptr != nullptr)
+      delayedFreeMemory.push_back(m_ptr);
+  }
+
+  ~GPUPtr()
+  {
+    if (!m_delayedFree && m_ptr != nullptr)
+      cudaFree(m_ptr);
+  }
+
+  operator bool() { return m_ptr != nullptr; }
+
+  T * m_ptr = nullptr;
+  uint32_t m_size = 0;
+  bool m_delayedFree = false;
+};
+
+struct TransferredGPUPtr
+{
+  void * m_ptr = nullptr;
+  uint32_t m_size = 0;
+
+  TransferredGPUPtr() = default;
+  TransferredGPUPtr(void * ptr, uint32_t size)
+    : m_ptr(ptr), m_size(size) {}
+
+  template<typename T>
+  void Set(GPUPtr<T> const &ptr)
+  {
+    m_ptr = ptr.m_ptr;
+    m_size = ptr.m_size;
+  }
+};
+TransferredGPUPtr transferredOutputPtr;
+}  // namespace
 
 bool Initialize()
 {
@@ -41,113 +95,31 @@ bool Initialize()
   return true;
 }
 
-std::vector<void *> delayedFreeMemory;
-
-template <typename T>
-class GPUPtr
+__global__ void InitRandom(curandState * randStates, unsigned long long seed) 
 {
-public:
-  explicit GPUPtr(uint32_t size, bool delayedFree = false) 
-    : m_size(size * sizeof(T)), m_delayedFree(delayedFree)
-  {
-    if (cudaMalloc(&m_ptr, m_size) != cudaSuccess)
-      m_ptr = nullptr;
-
-    if (m_delayedFree && m_ptr != nullptr)
-      delayedFreeMemory.push_back(m_ptr);
-  }
-
-  ~GPUPtr()
-  {
-    if (!m_delayedFree && m_ptr != nullptr)
-      cudaFree(m_ptr);
-  }
-
-  operator bool() { return m_ptr != nullptr; }
-
-  T * m_ptr = nullptr;
-  uint32_t m_size;
-  bool m_delayedFree;
-};
-
-struct TransferredGPUPtr
-{
-  void * m_ptr = nullptr;
-  uint32_t m_size = 0;
-
-  TransferredGPUPtr() = default;
-  TransferredGPUPtr(void * ptr, uint32_t size)
-    : m_ptr(ptr), m_size(size)
-  {}
-
-  template<typename T>
-  void Set(GPUPtr<T> const & ptr)
-  {
-    m_ptr = ptr.m_ptr;
-    m_size = ptr.m_size;
-  }
-};
-TransferredGPUPtr transferredOutputPtr;
-
-__device__ bool hitSphere(CudaSphere * sphere, CudaRay * ray, float tmin, float tmax, CudaHit * hit)
-{
-  float3 const d = ray->m_origin - sphere->m_center;
-  float const a = dot(ray->m_direction, ray->m_direction);
-  float const b = 2.0f * dot(d, ray->m_direction);
-  float const c = dot(d, d) - sphere->m_radius * sphere->m_radius;
-  float const discriminant = b * b - 4 * a * c;
-  if (discriminant < 0.0f)
-    return false;
-
-  auto const sqrtD = sqrt(discriminant);
-  auto const t = min((-b - sqrtD) / (2.0f * a), (-b + sqrtD) / (2.0f * a));
-  if (t < tmin || t > tmax)
-    return false;
-
-  hit->m_parameterT = t;
-  hit->m_position = ray->m_origin + ray->m_direction * t;
-  hit->m_normal = normalize(hit->m_position - sphere->m_center);
-  hit->m_materialIndex = sphere->m_materialIndex;
-  return true;
-}
-
-__device__ void TraceRayGPU(CudaRay * ray, CudaSphere * spheres, uint32_t spheresCount,
-                            CudaMaterial * materials, uint32_t materialsCount,
-                            CudaLight * lightSources, uint32_t lightSourcesCount,
-                            float3 backgroundColor, float znear, float zfar, float3 * output)
-{
-  CudaHit hit;
-  hit.m_parameterT = zfar + 1.0f;
-  bool hitFound = false;
-  for (uint32_t i = 0; i < spheresCount; ++i)
-  {
-    CudaHit h;
-    if (hitSphere(&spheres[i], ray, znear, zfar, &h))
-    {
-      hitFound = true;
-      if (h.m_parameterT < hit.m_parameterT)
-        hit = h;
-    }
-  }
-
-  if (hitFound)
-    *output = materials[hit.m_materialIndex].m_albedo;
-  else
-    *output = backgroundColor;
+  int rndx = blockIdx.x * blockDim.x + threadIdx.x;
+  int rndy = blockIdx.y * blockDim.y + threadIdx.y;
+  int rndIndex = rndy * gridDim.x * blockDim.x + rndx;
+  curand_init(seed, rndIndex, 0, &randStates[rndIndex]);
 }
 
 __global__ void TraceAllRaysGPU(CudaSphere * spheres, uint32_t spheresCount,
-                                CudaMaterial * materials, uint32_t materialsCount,
-                                CudaLight * lightSources, uint32_t lightSourcesCount,
-                                float3 backgroundColor, float3 origin, float3 forward, float3 up,
+                                CudaMaterial * materials, CudaLight * lightSources,
+                                uint32_t lightSourcesCount, float3 backgroundColor, 
+                                float3 origin, float3 forward, float3 up,
                                 float3 right, float2 halfScreenSize, float2 cellSize,
-                                uint32_t samplesInRowCount, float invSampleCount, float znear,
-                                float zfar, uint32_t offsetX, uint32_t offsetY, 
-                                uint32_t width, uint32_t height, float3 * output)
+                                uint32_t samplesInRowCount, float invSampleCount,
+                                float znear, float zfar, uint32_t offsetX, uint32_t offsetY,
+                                uint32_t width, uint32_t height, curandState * randStates,
+                                float3 * output)
 {
   __shared__ float3 samples[kThreadsInRow][kThreadsInRow];
   int x = blockIdx.x + offsetX;
   int y = blockIdx.y + offsetY;
+
+  int rndx = blockIdx.x * blockDim.x + threadIdx.x;
+  int rndy = blockIdx.y * blockDim.y + threadIdx.y;
+  int rndIndex = rndy * gridDim.x * blockDim.x + rndx;
 
   samples[threadIdx.x][threadIdx.y] = make_float3(0.0f, 0.0f, 0.0f);
   if (x < width && y < height)
@@ -168,8 +140,9 @@ __global__ void TraceAllRaysGPU(CudaSphere * spheres, uint32_t spheresCount,
         ray.m_direction = normalize(forward * znear + up * sdy + right * sdx);
 
         float3 outputColor;
-        TraceRayGPU(&ray, spheres, spheresCount, materials, materialsCount, lightSources,
-                    lightSourcesCount, backgroundColor, znear, zfar, &outputColor);
+        TraceRayGPU(&ray, spheres, spheresCount, materials,
+                    lightSources, lightSourcesCount, backgroundColor,
+                    znear, zfar, &randStates[rndIndex], &outputColor);
         samples[threadIdx.x][threadIdx.y] += outputColor;
 
         ty += blockDim.y;
@@ -249,6 +222,17 @@ cudaEvent_t RayTrace(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial *
     return completion;
   }
 
+  uint32_t constexpr kPartsCount = 16;
+  dim3 grids((width + kPartsCount - 1) / kPartsCount, (height + kPartsCount - 1) / kPartsCount);
+  dim3 threads(kThreadsInRow, kThreadsInRow);
+
+  GPUPtr<curandState> randStatesGPU(grids.x * grids.y * threads.x * threads.y);
+  if (!randStatesGPU)
+  {
+    std::cout << "Error allocate GPU memory." << std::endl;
+    return completion;
+  }
+
   GPUPtr<float3> outputGPU(width * height, true /* delayedFree */);
   if (!outputGPU)
   {
@@ -256,6 +240,9 @@ cudaEvent_t RayTrace(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial *
     return completion;
   }
   transferredOutputPtr.Set(outputGPU);
+
+  InitRandom<<<grids, threads>>>(randStatesGPU.m_ptr, 
+                                 static_cast<unsigned long long>(time(nullptr)));
 
   static float3 kUp = make_float3(0.0f, 1.0f, 0.0f);
   auto const aspect = static_cast<float>(height) / width;
@@ -268,19 +255,18 @@ cudaEvent_t RayTrace(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial *
       make_float2(2.0f * halfScreenSize.x / width, 2.0f * halfScreenSize.y / height);
   float const invSampleCount = 1.0f / (samplesInRowCount * samplesInRowCount);
 
-  uint32_t constexpr kPartsCount = 6;
-  dim3 grids((width + kPartsCount - 1) / kPartsCount, (height + kPartsCount - 1) / kPartsCount);
-  dim3 threads(samplesInRowCount, samplesInRowCount);
   for (uint32_t i = 0; i < kPartsCount; ++i)
   {
     bool needInterrupt = false;
     for (uint32_t j = 0; j < kPartsCount; ++j)
     {
-      TraceAllRaysGPU<<<grids, kThreadsInRow>>>(
-          spheresGPU.m_ptr, spheresCount, materialsGPU.m_ptr, materialsCount, lightSourcesGPU.m_ptr,
-          lightSourcesCount, backgroundColor, cameraPosition, cameraDirection, up, right,
-          halfScreenSize, cellSize, samplesInRowCount, invSampleCount, znear, zfar, 
-          i * grids.x, j * grids.y, width, height, outputGPU.m_ptr);
+      TraceAllRaysGPU<<<grids, threads>>>(
+        spheresGPU.m_ptr, spheresCount, materialsGPU.m_ptr,
+        lightSourcesGPU.m_ptr, lightSourcesCount, backgroundColor,
+        cameraPosition, cameraDirection, up, right, halfScreenSize,
+        cellSize, samplesInRowCount, invSampleCount, znear, zfar,
+        i * grids.x, j * grids.y, width, height, randStatesGPU.m_ptr,
+        outputGPU.m_ptr);
 
       if (realtimeHandler)
         needInterrupt = realtimeHandler();
@@ -290,10 +276,7 @@ cudaEvent_t RayTrace(CudaSphere * spheres, uint32_t spheresCount, CudaMaterial *
   }
 
   if (cudaEventRecord(completion, 0) != cudaSuccess)
-  {
     std::cout << "Error call cudaEventRecord." << std::endl;
-    return completion;
-  }
 
   return completion;
 }

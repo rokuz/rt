@@ -63,7 +63,7 @@ public:
       std::shared_ptr<Material> mat;
       if (i >= 15)
       {
-        mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.1f, randomFloat(generator)),
+        mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.0f, randomFloat(generator)),
                                                 glm::mix(0.5f, 0.9f, randomFloat(generator)));
       }
       else

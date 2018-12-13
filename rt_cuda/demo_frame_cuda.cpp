@@ -140,7 +140,7 @@ bool DemoFrameCUDA::HasFinished()
         return false;
       m_completionEvent = m_future.get();
     }
-    catch (std::exception const & ex) {}
+    catch (std::exception const &) {}
   }
 
   ray_tracing_cuda::FinishRayTrace(reinterpret_cast<float *>(m_buffer->data()), m_completionEvent);
@@ -171,7 +171,7 @@ bool DemoFrameCUDA::InProgress()
         return true;
       m_completionEvent = m_future.get();
     }
-    catch (std::exception const & ex) {}
+    catch (std::exception const &) {}
   }
 
   return ray_tracing_cuda::InProgress(m_completionEvent);

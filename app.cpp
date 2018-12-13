@@ -91,12 +91,16 @@ void App::RayTrace(bool highQuality)
   m_originalSamplesCount = m_demo->GetFrame()->GetSamplesInRowCount();
   if (highQuality)
   {
-    m_demo->GetFrame()->SetSamplesInRowCount(
-        std::max(m_originalSamplesCount, static_cast<uint32_t>(10)));
+#if defined(ENABLE_CUDA)
+    uint32_t constexpr kSamplesCount = 20;
+#else
+    uint32_t constexpr kSamplesCount = 10;
+#endif
+    m_demo->GetFrame()->SetSamplesInRowCount(std::max(m_originalSamplesCount, kSamplesCount));
   }
 
   for (auto & p : *m_buffer)
-    p = glm::vec3(0.0, 0.0, 0.0);
+    p = glm::vec3(0.0f, 0.0f, 0.0f);
 
   UpdateTexture(*m_buffer);
   m_lastUpdateRealtimeBuffer = 0.0;

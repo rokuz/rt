@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\3party\gl3w\gl3w.cpp" />
+    <ClCompile Include="..\..\3party\glfw\src\context.c" />
+    <ClCompile Include="..\..\3party\glfw\src\egl_context.c" />
+    <ClCompile Include="..\..\3party\glfw\src\init.c" />
+    <ClCompile Include="..\..\3party\glfw\src\input.c" />
+    <ClCompile Include="..\..\3party\glfw\src\monitor.c" />
+    <ClCompile Include="..\..\3party\glfw\src\osmesa_context.c" />
+    <ClCompile Include="..\..\3party\glfw\src\vulkan.c" />
+    <ClCompile Include="..\..\3party\glfw\src\wgl_context.c" />
+    <ClCompile Include="..\..\3party\glfw\src\win32_init.c" />
+    <ClCompile Include="..\..\3party\glfw\src\win32_joystick.c" />
+    <ClCompile Include="..\..\3party\glfw\src\win32_monitor.c" />
+    <ClCompile Include="..\..\3party\glfw\src\win32_thread.c" />
+    <ClCompile Include="..\..\3party\glfw\src\win32_time.c" />
+    <ClCompile Include="..\..\3party\glfw\src\win32_window.c" />
+    <ClCompile Include="..\..\3party\glfw\src\window.c" />
+    <ClCompile Include="..\..\app.cpp" />
+    <ClCompile Include="..\..\demos\demo_frame_cpu.cpp" />
+    <ClCompile Include="..\..\main.cpp" />
+    <ClCompile Include="..\..\ray_tracing\default_materials.cpp" />
+    <ClCompile Include="..\..\ray_tracing\directional_light.cpp" />
+    <ClCompile Include="..\..\ray_tracing\frame.cpp" />
+    <ClCompile Include="..\..\ray_tracing\multithreaded_frame.cpp" />
+    <ClCompile Include="..\..\ray_tracing\sphere.cpp" />
+    <ClCompile Include="..\..\rendering\gpuprogram.cpp" />
+    <ClCompile Include="..\..\rendering\mesh.cpp" />
+    <ClCompile Include="..\..\rendering\pipelinestate.cpp" />
+    <ClCompile Include="..\..\rendering\texture.cpp" />
+    <ClCompile Include="..\..\rt_cuda\demo_frame_cuda.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\3party\gl3w\gl3w.h" />
+    <ClInclude Include="..\..\3party\gl3w\glcorearb.h" />
+    <ClInclude Include="..\..\3party\gl3w\glext.h" />
+    <ClInclude Include="..\..\3party\gl3w\glxext.h" />
+    <ClInclude Include="..\..\3party\gl3w\wglext.h" />
+    <ClInclude Include="..\..\3party\glfw\src\egl_context.h" />
+    <ClInclude Include="..\..\3party\glfw\src\internal.h" />
+    <ClInclude Include="..\..\3party\glfw\src\mappings.h" />
+    <ClInclude Include="..\..\3party\glfw\src\osmesa_context.h" />
+    <ClInclude Include="..\..\3party\glfw\src\wgl_context.h" />
+    <ClInclude Include="..\..\3party\glfw\src\win32_joystick.h" />
+    <ClInclude Include="..\..\3party\glfw\src\win32_platform.h" />
+    <ClInclude Include="..\..\app.hpp" />
+    <ClInclude Include="..\..\demos\demo.hpp" />
+    <ClInclude Include="..\..\demos\demo_frame_cpu.hpp" />
+    <ClInclude Include="..\..\demos\glass_spheres.hpp" />
+    <ClInclude Include="..\..\demos\palette.hpp" />
+    <ClInclude Include="..\..\demos\pretty_spheres.hpp" />
+    <ClInclude Include="..\..\global.hpp" />
+    <ClInclude Include="..\..\ray_tracing\default_materials.hpp" />
+    <ClInclude Include="..\..\ray_tracing\directional_light.hpp" />
+    <ClInclude Include="..\..\ray_tracing\frame.hpp" />
+    <ClInclude Include="..\..\ray_tracing\hitable_object.hpp" />
+    <ClInclude Include="..\..\ray_tracing\light.hpp" />
+    <ClInclude Include="..\..\ray_tracing\material.hpp" />
+    <ClInclude Include="..\..\ray_tracing\multithreaded_frame.hpp" />
+    <ClInclude Include="..\..\ray_tracing\ray.hpp" />
+    <ClInclude Include="..\..\ray_tracing\sphere.hpp" />
+    <ClInclude Include="..\..\ray_tracing\types.hpp" />
+    <ClInclude Include="..\..\rendering\gpuprogram.hpp" />
+    <ClInclude Include="..\..\rendering\mesh.hpp" />
+    <ClInclude Include="..\..\rendering\pipelinestate.hpp" />
+    <ClInclude Include="..\..\rendering\texture.hpp" />
+    <ClInclude Include="..\..\rt_cuda\demo_frame_cuda.hpp" />
+    <ClInclude Include="..\..\rt_cuda\rt_cuda.h" />
+    <ClInclude Include="..\..\rt_cuda\rt_functions.h" />
+    <ClInclude Include="..\..\rt_cuda\rt_hits.h" />
+    <ClInclude Include="..\..\rt_cuda\rt_materials.h" />
+    <ClInclude Include="..\..\rt_cuda\rt_random.h" />
+    <ClInclude Include="..\..\rt_cuda\types_cuda.h" />
+    <ClInclude Include="..\glfw_config.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\rt_cuda\rt_cuda.cu" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F8DF99CB-7CAF-4AA3-BEF0-18B551017E95}</ProjectGuid>
+    <RootNamespace>rt</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>ENABLE_CUDA;_GLFW_USE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;../..;../../3party/cxxopts/include;../../3party/cuda-workshop/cutil/inc;../../3party/gl3w;../../3party/glfw/include;../../3party/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <InterleaveSourceInPTX>true</InterleaveSourceInPTX>
+      <GenerateLineInfo>false</GenerateLineInfo>
+      <PtxAsOptionV>false</PtxAsOptionV>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
+    <CudaLink>
+      <GPUDebugInfo>true</GPUDebugInfo>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>ENABLE_CUDA;_GLFW_USE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;../..;../../3party/cxxopts/include;../../3party/cuda-workshop/cutil/inc;../../3party/gl3w;../../3party/glfw/include;../../3party/glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
+  </ImportGroup>
+</Project>

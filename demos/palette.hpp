@@ -55,7 +55,7 @@ public:
   template<typename Generator>
   static glm::vec3 Random(Generator & generator, std::vector<uint32_t> const & palette)
   {
-    std::uniform_int_distribution<> rnd(0, palette.size() - 1);
+    std::uniform_int_distribution<> rnd(0, static_cast<int>(palette.size() - 1));
     return Convert(palette[rnd(generator)]);
   }
 
@@ -64,7 +64,7 @@ public:
   {
     static std::vector<std::vector<uint32_t>> kAll = {Blue(), Warm(), Green(), Yellow(), Red()};
 
-    std::uniform_int_distribution<> rnd(0, kAll.size() - 1);
+    std::uniform_int_distribution<> rnd(0, static_cast<int>(kAll.size() - 1));
     return Random(generator, kAll[rnd(generator)]);
   }
 

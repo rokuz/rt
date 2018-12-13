@@ -14,8 +14,14 @@ include_directories(${CUDA_INCLUDE_DIRS})
 set(SOURCE_LIB
   demo_frame_cuda.cpp
   demo_frame_cuda.hpp
-	rt_cuda.cu
-	rt_cuda.h
+  rt_cuda.cu
+  rt_cuda.h
+  rt_functions.h
+  rt_hits.h
+  rt_random.h
+  rt_light.h
+  rt_materials.h
+  types_cuda.h
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCE_LIB})

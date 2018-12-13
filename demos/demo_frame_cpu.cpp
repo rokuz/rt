@@ -29,8 +29,6 @@ glm::vec3 DemoFrameCPU::RayTrace(ray_tracing::Ray const & ray, float znear, floa
   glm::vec3 specularColor = glm::vec3(0.0f, 0.0f, 0.0f);
   for (auto const & source : m_lightSources)
     specularColor += source->GetSpecular(ray, hit.value());
-  if (!m_lightSources.empty())
-    specularColor /= m_lightSources.size();
 
   return diffuseColor + specularColor;
 }
@@ -49,8 +47,6 @@ glm::vec3 DemoFrameCPU::RayTraceObjects(ray_tracing::Ray const & ray,
     lightColor += source->TraceLight(ray, hit,
       std::bind(&DemoFrameCPU::HitObjects, this, _1, _2, _3));
   }
-  if (!m_lightSources.empty())
-    lightColor /= m_lightSources.size();
 
   auto c = lightColor * scatterResult.m_attenuation;
   if (depth >= 5 || fabs(scatterResult.m_energyImpact) < ray_tracing::kEps)

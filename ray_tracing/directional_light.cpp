@@ -52,7 +52,7 @@ glm::vec3 DirectionalLight::TraceLightWithDepth(Hit const & hit, Tracer && trace
     return m_color;
 
   glm::vec3 c = glm::vec3(0.0f, 0.0f, 0.0f);
-  uint32_t kCount = 5;
+  uint32_t constexpr kCount = 5;
   for (uint32_t i = 0; i < kCount; ++i)
   {
     auto const dir = glm::normalize(h->m_normal + glm::ballRand(1.0f));
