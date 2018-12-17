@@ -24,59 +24,66 @@ __device__ void TraceRayGPU(CudaRay * ray, CudaSphere * spheres, uint32_t sphere
                             uint32_t lightSourcesCount, float3 backgroundColor, float znear,
                             float zfar, curandState * randState, float3 * output)
 {
+  ScatterResult scatterResults[kMaxDepth];
+  float3 diffuseLight[kMaxDepth];
+  float3 specularLight[kMaxDepth];
+  int scatterResultsCount = 0;
+
+  // Back tracing.
   CudaHit hit;
-  bool hitFound = HitObjects(ray, spheres, spheresCount, znear, zfar, &hit);
-
-  if (hitFound)
+  CudaRay * scatteredRay = ray;
+  for (; scatterResultsCount < kMaxDepth; ++scatterResultsCount)
   {
-    ScatterResult scatterResults[kMaxDepth];
-    float3 diffuseLight[kMaxDepth];
-    int scatterResultsCount = 0;
+    diffuseLight[scatterResultsCount] = make_float3(0.0f, 0.0f, 0.0f);
+    specularLight[scatterResultsCount] = make_float3(0.0f, 0.0f, 0.0f);
 
-    CudaRay * scatteredRay = ray;
-    CudaHit h = hit;
-    for (; scatterResultsCount < kMaxDepth; ++scatterResultsCount)
+    bool hitFound = HitObjects(scatteredRay, spheres, spheresCount, znear, zfar, &hit);
+    if (!hitFound)
+      break;
+
+    Scatter(scatteredRay, &hit, materials, randState, &scatterResults[scatterResultsCount]);
+    if (fabs(scatterResults[scatterResultsCount].m_energyEmissivity) < ray_tracing::kEps)
     {
-      diffuseLight[scatterResultsCount] = make_float3(0.0f, 0.0f, 0.0f);
-      Scatter(scatteredRay, &h, materials, randState, &scatterResults[scatterResultsCount]);
-      if (fabs(scatterResults[scatterResultsCount].m_energyEmissivity) < ray_tracing::kEps)
-        break;
-
-      diffuseLight[scatterResultsCount] = TraceDiffuseLight(&h, spheres, spheresCount, materials,
-                                                            lightSources, lightSourcesCount, randState);
-
-      scatteredRay = &scatterResults[scatterResultsCount].m_scatteredRay;
-      if (!HitObjects(scatteredRay, spheres, spheresCount, 0.001f, zfar, &h))
-        break;
+      scatterResults[scatterResultsCount].m_attenuation = backgroundColor;
+      scatterResults[scatterResultsCount].m_energyEmissivity = 1.0f;
+      ++scatterResultsCount;
+      break;
     }
 
-    float3 outputColor;
-    if (scatterResultsCount < 2)
-    {
-      outputColor = (scatterResults[0].m_attenuation + diffuseLight[0]);
-    }
-    else
-    {
-      int i = scatterResultsCount - 1;
-      float3 att = (scatterResults[i].m_attenuation + diffuseLight[i]);
-      float restEnergy = scatterResults[i].m_energyEmissivity;
-      while (i > 0)
-      {
-        att *= ((scatterResults[i - 1].m_attenuation + diffuseLight[i - 1]) * restEnergy);
-        restEnergy *= scatterResults[i - 1].m_energyEmissivity;
-        i--;
-        if (fabs(restEnergy) < ray_tracing::kEps)
-          break;
-      }
-      outputColor = att;
-    }
+    diffuseLight[scatterResultsCount] = TraceDiffuseLight(&hit, spheres, spheresCount, materials,
+                                                          lightSources, lightSourcesCount, randState);
+    specularLight[scatterResultsCount] = GetSpecularLight(scatteredRay, &hit, materials, lightSources,
+                                                          lightSourcesCount, randState);
 
-    // Brigthness correction.
-    *output = 0.5f * outputColor;
+    scatteredRay = &scatterResults[scatterResultsCount].m_scatteredRay;
+
+    // Secondary hits start with a slight offset.
+    znear = 0.001f;
+  }
+
+  if (scatterResultsCount == 0)
+  {
+    // Get we use environment color.
+    *output = backgroundColor;
   }
   else
   {
-    *output = backgroundColor;
+    // Accumulate color with energy saving influence.
+    int i = static_cast<int>(scatterResultsCount) - 1;
+    float3 att = make_float3(1.0f, 1.0f, 1.0f);
+    float restEnergy = 1.0f;
+    while (i >= 0)
+    {
+      float3 l = scatterResults[i].m_attenuation + diffuseLight[i] + specularLight[i];
+      att *= (l * restEnergy);
+      restEnergy *= scatterResults[i].m_energyEmissivity;
+      i--;
+      if (fabs(restEnergy) < ray_tracing::kEps)
+        break;
+    }
+
+    // Brigthness correction.
+    *output = 0.5f * att;
   }
 }
 }  // namespace ray_tracing_cuda

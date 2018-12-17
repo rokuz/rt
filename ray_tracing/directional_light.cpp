@@ -10,7 +10,7 @@
 
 namespace ray_tracing
 {
-uint32_t constexpr kLightSamplesCount = 3;
+uint32_t constexpr kLightSamplesCount = 5;
 
 glm::vec3 DirectionalLight::TraceLight(Ray const & ray, Hit const & hit, Tracer && tracer)
 {
@@ -20,7 +20,16 @@ glm::vec3 DirectionalLight::TraceLight(Ray const & ray, Hit const & hit, Tracer 
     Ray const r(hit.m_position, glm::normalize(-m_direction + glm::ballRand(0.25f)));
 
     if (!tracer(r, 0.001f, 1000.0f))
+    {
       color += (m_color * std::max(0.0f, glm::dot(r.Direction(), hit.m_normal)));
+    }
+    else
+    {
+      // Highly refracted surfaces can color shadows.
+      auto const c = glm::mix(hit.m_material->GetAlbedo(), m_color, 0.75f);
+      color += (hit.m_material->GetRefraction() * 0.75f * c *
+                std::max(0.0f, glm::dot(r.Direction(), hit.m_normal)));
+    } 
   }
   return color / static_cast<float>(kLightSamplesCount);
 }
@@ -46,8 +55,7 @@ glm::vec3 DirectionalLight::GetSpecular(Ray const & ray, Hit const & hit)
   float const f2 = f0 * f0;
   float const F = f2 + (1.0f - f2) * pow(1.0f - vdn, 5.0f);
 
-  float spec = 1.0f;
-  spec = glm::clamp(G * D * F, 0.0f, 1.0f);
+  float const spec = glm::clamp(G * D * F, 0.0f, 1.0f);
   return glm::mix(m_color, hit.m_material->GetAlbedo(), 0.5f) * spec;
 }
 }  // namespace ray_tracing

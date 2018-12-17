@@ -143,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="..\..\app.hpp" />
     <ClInclude Include="..\..\global.hpp" />
+    <ClInclude Include="..\..\rt_cuda\rt_light.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\rt_cuda\demo_frame_cuda.cpp">

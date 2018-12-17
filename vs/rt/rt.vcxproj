@@ -79,6 +79,7 @@
     <ClInclude Include="..\..\rt_cuda\rt_cuda.h" />
     <ClInclude Include="..\..\rt_cuda\rt_functions.h" />
     <ClInclude Include="..\..\rt_cuda\rt_hits.h" />
+    <ClInclude Include="..\..\rt_cuda\rt_light.h" />
     <ClInclude Include="..\..\rt_cuda\rt_materials.h" />
     <ClInclude Include="..\..\rt_cuda\rt_random.h" />
     <ClInclude Include="..\..\rt_cuda\types_cuda.h" />

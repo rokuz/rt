@@ -30,7 +30,7 @@ public:
 
     using namespace ray_tracing;
 
-    m_frame->SetBackgroundColor(glm::vec3(0.3f, 0.3f, 0.3f));
+    m_frame->SetBackgroundColor(glm::vec3(0.9f, 0.9f, 0.9f));
 
     m_frame->SetCameraPosition(glm::vec3(0.0f, 2.0f, -10.0f));
     m_frame->SetCameraDirection(glm::vec3(0.0f, -1.0f, 3.0f));
@@ -60,13 +60,13 @@ public:
       auto const p = generatePosition();
       auto const c = Palette::RandomFromAll(generator);
 
-      auto mat = std::make_shared<material::Glass>(c, glm::mix(0.7f, 0.9f, randomFloat(generator)));
+      auto mat = std::make_shared<material::Glass>(c, glm::mix(0.8f, 0.9f, randomFloat(generator)));
       float const radius = glm::mix(0.25f, 0.5f, randomFloat(generator));
       m_frame->AddObject(std::make_unique<Sphere>(glm::vec3(p.first, radius - 1.0f, p.second), radius, mat));
     }
     m_frame->AddObject(std::make_unique<Sphere>(
       glm::vec3(0.0, -1001.0f, 0.0), 1000.0f,
-      std::make_shared<material::Matte>(glm::vec3(0.1f, 0.1f, 0.1f))));
+      std::make_shared<material::Matte>(glm::vec3(0.4f, 0.4f, 0.4f))));
 
     m_frame->AddLightSource(std::make_unique<DirectionalLight>(
       glm::normalize(glm::vec3(-0.4f, -1.0f, 0.6f)),
