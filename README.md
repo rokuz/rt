@@ -8,13 +8,13 @@ Simple C++ ray tracing framework and demos.
 
 # Demos
 ## 1. Pretty spheres
-![Pretty spheres Demo](screenshots/pretty_spheres.png?raw=true "Pretty spheres Demo")
+![Pretty spheres Demo](screenshots/demo_pretty_spheres.png?raw=true "Pretty spheres Demo")
 Here we render a bunch of spheres with random color, roughness and refraction index.
 * Global illumination - scattering on the matte and reflective surfaces;
 * Directional light source - light (shadow) rays;
 * Specularity - Cook-Torrance approximation.
 ## 2. Glass spheres
-![Glass spheres Demo](screenshots/glass_spheres.png?raw=true "Glass spheres Demo")
+![Glass spheres Demo](screenshots/demo_glass_spheres.png?raw=true "Glass spheres Demo")
 Everything as in Pretty spheres demo + refraction on glass surfaces.
 
 ## Command line arguments
