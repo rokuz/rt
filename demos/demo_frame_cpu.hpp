@@ -19,8 +19,10 @@ public:
   void AddLightSource(std::unique_ptr<ray_tracing::Light> && light) override;
 
 private:
-  glm::vec3 RayTraceObjects(ray_tracing::Ray const & ray, ray_tracing::Hit const & hit,
-                            float znear, float zfar, int depth);
+  glm::vec3 TraceDiffuseLight(ray_tracing::Ray const & ray,
+                              ray_tracing::Hit const & hit);
+  glm::vec3 GetSpecularLight(ray_tracing::Ray const & ray,
+                             ray_tracing::Hit const & hit);
 
   std::optional<ray_tracing::Hit> HitObjects(ray_tracing::Ray const & ray,
                                              float znear, float zfar) const;

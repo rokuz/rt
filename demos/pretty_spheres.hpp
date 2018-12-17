@@ -63,8 +63,8 @@ public:
       std::shared_ptr<Material> mat;
       if (i >= 15)
       {
-        mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.0f, randomFloat(generator)),
-                                                glm::mix(0.5f, 0.9f, randomFloat(generator)));
+        mat = std::make_shared<material::Metal>(c, glm::mix(0.0f, 0.5f, randomFloat(generator)),
+                                                glm::mix(0.9f, 0.9f, randomFloat(generator)));
       }
       else
       {
@@ -80,7 +80,7 @@ public:
 
     m_frame->AddLightSource(std::make_unique<DirectionalLight>(
       glm::normalize(glm::vec3(-0.4f, -1.0f, 0.6f)),
-      glm::vec3(1.0f, 1.0f, 1.0f)));
+      glm::vec3(0.5f, 0.5f, 0.5f)));
 
     return true;
   }

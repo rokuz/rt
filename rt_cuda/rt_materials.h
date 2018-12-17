@@ -43,7 +43,7 @@ __device__ void ScatterMetal(CudaRay * ray, CudaHit * hit, CudaMaterial * materi
   result->m_scatteredRay.m_origin = hit->m_position;
   result->m_scatteredRay.m_direction = reflectVector;
 
-  if (dot(hit->m_normal, reflectVector) < 0.0f)
+  if (dot(hit->m_normal, reflectVector) <= 0.0f)
   {
     result->m_attenuation = make_float3(0.0f, 0.0f, 0.0f);
     result->m_energyEmissivity = 0.0f;

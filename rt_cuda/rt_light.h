@@ -18,7 +18,7 @@
 
 namespace ray_tracing_cuda
 {
-uint32_t constexpr kLightSamplesCount = 1;
+uint32_t constexpr kLightSamplesCount = 3;
 
 __device__ float3 TraceDiffuseDirectionalLight(CudaHit * hit, CudaSphere * spheres,
                                                uint32_t spheresCount, CudaMaterial * materials,

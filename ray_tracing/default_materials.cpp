@@ -14,7 +14,7 @@ Material::ScatterResult Matte::Scatter(Ray const & ray, Hit const & hit)
   result.m_attenuation = m_albedo;
   auto const dir = glm::normalize(hit.m_normal + glm::ballRand(1.0f));
   result.m_scatteredRay = Ray(hit.m_position, dir);
-  result.m_energyImpact = 0.7f;
+  result.m_energyEmissivity = 0.7f;
   return result;
 }
 
@@ -26,9 +26,9 @@ Material::ScatterResult Metal::Scatter(Ray const & ray, Hit const & hit)
   result.m_attenuation = m_albedo;
   result.m_scatteredRay = Ray(hit.m_position, reflectVector);
   if (glm::dot(hit.m_normal, reflectVector) <= 0.0f)
-    result.m_energyImpact = 0.0f;
+    result.m_energyEmissivity = 0.0f;
   else
-    result.m_energyImpact = 0.3f;
+    result.m_energyEmissivity = 0.9f * (1.0f - m_roughness);
   return result;
 }
 
@@ -62,7 +62,7 @@ Material::ScatterResult Glass::Scatter(Ray const & ray, Hit const & hit)
     ref = f2 + (1.0f - f2) * pow(1.0f - vdn, 5.0f);
   }
   result.m_scatteredRay = Ray(hit.m_position, (glm::linearRand(0.0f, 1.0f) < ref) ? reflectVector : refractVector);
-  result.m_energyImpact = 0.2f;
+  result.m_energyEmissivity = 1.0f;
   return result;
 }
 }  // namespace material

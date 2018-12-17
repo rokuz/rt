@@ -29,8 +29,8 @@ __device__ void TraceRayGPU(CudaRay * ray, CudaSphere * spheres, uint32_t sphere
 
   if (hitFound)
   {
-    ScatterResult scatterResults[kMaxDepth + 1];
-    float3 diffuseLight[kMaxDepth + 1];
+    ScatterResult scatterResults[kMaxDepth];
+    float3 diffuseLight[kMaxDepth];
     int scatterResultsCount = 0;
 
     CudaRay * scatteredRay = ray;
@@ -41,9 +41,11 @@ __device__ void TraceRayGPU(CudaRay * ray, CudaSphere * spheres, uint32_t sphere
       Scatter(scatteredRay, &h, materials, randState, &scatterResults[scatterResultsCount]);
       if (fabs(scatterResults[scatterResultsCount].m_energyEmissivity) < ray_tracing::kEps)
         break;
-      scatteredRay = &scatterResults[scatterResultsCount].m_scatteredRay;
+
       diffuseLight[scatterResultsCount] = TraceDiffuseLight(&h, spheres, spheresCount, materials,
                                                             lightSources, lightSourcesCount, randState);
+
+      scatteredRay = &scatterResults[scatterResultsCount].m_scatteredRay;
       if (!HitObjects(scatteredRay, spheres, spheresCount, 0.001f, zfar, &h))
         break;
     }
@@ -61,8 +63,8 @@ __device__ void TraceRayGPU(CudaRay * ray, CudaSphere * spheres, uint32_t sphere
       while (i > 0)
       {
         att *= ((scatterResults[i - 1].m_attenuation + diffuseLight[i - 1]) * restEnergy);
-        --i;
         restEnergy *= scatterResults[i - 1].m_energyEmissivity;
+        i--;
         if (fabs(restEnergy) < ray_tracing::kEps)
           break;
       }
