@@ -24,8 +24,6 @@ public:
   glm::vec3 GetSpecular(Ray const & ray, Hit const & hit) override;
 
 private:
-  glm::vec3 TraceLightWithDepth(Hit const & hit, Tracer && tracer, int depth);
-
   glm::vec3 const m_direction;
   glm::vec3 const m_color;
 };

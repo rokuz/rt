@@ -3,7 +3,8 @@ Simple C++ ray tracing framework and demos.
 
 # Features
 * Multithreading support;
-* Supersampling support.
+* Supersampling support;
+* CUDA support (Windows only).
 
 # Demos
 ## 1. Pretty spheres

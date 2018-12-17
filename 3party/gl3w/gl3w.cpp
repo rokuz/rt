@@ -5,11 +5,16 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <iostream>
+
 static HMODULE libgl;
+typedef PROC(WINAPI * PFN_wglGetProcAddress)(LPCSTR);
+PFN_wglGetProcAddress _wglGetProcAddress;
 
 static void open_libgl(void)
 {
-	libgl = LoadLibraryA("opengl32.dll");
+  libgl = LoadLibraryA("opengl32.dll");
+  _wglGetProcAddress = (PFN_wglGetProcAddress)GetProcAddress(libgl, "wglGetProcAddress");
 }
 
 static void close_libgl(void)
@@ -17,22 +22,18 @@ static void close_libgl(void)
 	FreeLibrary(libgl);
 }
 
-static void *get_proc(const char *proc)
+static void *get_proc(const char * proc)
 {
-	void *res;
+	void * res = NULL;
 
-	res = wglGetProcAddress(proc);
+  if (_wglGetProcAddress)
+	  res = _wglGetProcAddress(proc);
+
 	if (!res)
 		res = GetProcAddress(libgl, proc);
 
-	//if (!res)
-	//{
-	//	static char buf[2048];
-	//	sprintf(buf, "Warning: Function %s has not been found\n", proc);
-	//	#ifdef WIN32
-	//	OutputDebugStringA(buf);
-	//	#endif
-	//}
+  if (!res)
+    std::cout << "Could not find OpenGL function: " << proc << std::endl;
 
 	return res;
 }

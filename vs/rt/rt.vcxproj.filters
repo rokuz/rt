@@ -1,0 +1,240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="demos">
+      <UniqueIdentifier>{cf52d209-fbaa-472c-9660-10925e52ad3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ray_tracing">
+      <UniqueIdentifier>{9aaafca4-0ec7-4b2b-b3c5-a427a977270a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering">
+      <UniqueIdentifier>{352650d8-b0ce-499e-aabd-d9986da7b682}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rt_cuda">
+      <UniqueIdentifier>{86527803-e6aa-4f1f-9503-1b6744d4beda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3party">
+      <UniqueIdentifier>{35a9d602-e989-4de3-889b-2b6befd2cdc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3party\glfw">
+      <UniqueIdentifier>{38b943ad-315b-4315-8d41-c849dde057a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3party\gl3w">
+      <UniqueIdentifier>{cfc2c553-11f9-4802-bffd-1bee2f721f86}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\rt_cuda\demo_frame_cuda.hpp">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rt_cuda\rt_cuda.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rt_cuda\rt_functions.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rt_cuda\rt_hits.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rt_cuda\rt_materials.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rt_cuda\rt_random.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rt_cuda\types_cuda.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demos\demo.hpp">
+      <Filter>demos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demos\demo_frame_cpu.hpp">
+      <Filter>demos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demos\glass_spheres.hpp">
+      <Filter>demos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demos\palette.hpp">
+      <Filter>demos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demos\pretty_spheres.hpp">
+      <Filter>demos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rendering\gpuprogram.hpp">
+      <Filter>rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rendering\mesh.hpp">
+      <Filter>rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rendering\pipelinestate.hpp">
+      <Filter>rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rendering\texture.hpp">
+      <Filter>rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\default_materials.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\directional_light.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\frame.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\hitable_object.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\light.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\material.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\multithreaded_frame.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\ray.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\sphere.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ray_tracing\types.hpp">
+      <Filter>ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\wgl_context.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\win32_joystick.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\win32_platform.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\gl3w\wglext.h">
+      <Filter>3party\gl3w</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\gl3w\gl3w.h">
+      <Filter>3party\gl3w</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\gl3w\glcorearb.h">
+      <Filter>3party\gl3w</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\gl3w\glext.h">
+      <Filter>3party\gl3w</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\gl3w\glxext.h">
+      <Filter>3party\gl3w</Filter>
+    </ClInclude>
+    <ClInclude Include="..\glfw_config.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\internal.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\mappings.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\osmesa_context.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3party\glfw\src\egl_context.h">
+      <Filter>3party\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\app.hpp" />
+    <ClInclude Include="..\..\global.hpp" />
+    <ClInclude Include="..\..\rt_cuda\rt_light.h">
+      <Filter>rt_cuda</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\rt_cuda\demo_frame_cuda.cpp">
+      <Filter>rt_cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demos\demo_frame_cpu.cpp">
+      <Filter>demos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\rendering\gpuprogram.cpp">
+      <Filter>rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\rendering\mesh.cpp">
+      <Filter>rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\rendering\pipelinestate.cpp">
+      <Filter>rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\rendering\texture.cpp">
+      <Filter>rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ray_tracing\default_materials.cpp">
+      <Filter>ray_tracing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ray_tracing\directional_light.cpp">
+      <Filter>ray_tracing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ray_tracing\frame.cpp">
+      <Filter>ray_tracing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ray_tracing\multithreaded_frame.cpp">
+      <Filter>ray_tracing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ray_tracing\sphere.cpp">
+      <Filter>ray_tracing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\wgl_context.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\win32_init.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\win32_joystick.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\win32_monitor.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\win32_thread.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\win32_time.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\win32_window.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\window.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\gl3w\gl3w.cpp">
+      <Filter>3party\gl3w</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\init.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\input.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\monitor.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\context.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\osmesa_context.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\egl_context.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\3party\glfw\src\vulkan.c">
+      <Filter>3party\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\app.cpp" />
+    <ClCompile Include="..\..\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\rt_cuda\rt_cuda.cu">
+      <Filter>rt_cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

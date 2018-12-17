@@ -10,9 +10,28 @@
 
 namespace ray_tracing
 {
+uint32_t constexpr kLightSamplesCount = 5;
+
 glm::vec3 DirectionalLight::TraceLight(Ray const & ray, Hit const & hit, Tracer && tracer)
 {
-  return TraceLightWithDepth(hit, std::move(tracer), 1);
+  glm::vec3 color = glm::vec3(0.0f, 0.0f, 0.0f);
+  for (uint32_t i = 0; i < kLightSamplesCount; ++i)
+  {
+    Ray const r(hit.m_position, glm::normalize(-m_direction + glm::ballRand(0.25f)));
+
+    if (!tracer(r, 0.001f, 1000.0f))
+    {
+      color += (m_color * std::max(0.0f, glm::dot(r.Direction(), hit.m_normal)));
+    }
+    else
+    {
+      // Highly refracted surfaces can color shadows.
+      auto const c = glm::mix(hit.m_material->GetAlbedo(), m_color, 0.75f);
+      color += (hit.m_material->GetRefraction() * 0.75f * c *
+                std::max(0.0f, glm::dot(r.Direction(), hit.m_normal)));
+    } 
+  }
+  return color / static_cast<float>(kLightSamplesCount);
 }
 
 glm::vec3 DirectionalLight::GetSpecular(Ray const & ray, Hit const & hit)
@@ -36,32 +55,7 @@ glm::vec3 DirectionalLight::GetSpecular(Ray const & ray, Hit const & hit)
   float const f2 = f0 * f0;
   float const F = f2 + (1.0f - f2) * pow(1.0f - vdn, 5.0f);
 
-  float spec = 1.0f;
-  spec = glm::clamp(G * D * F, 0.0f, 1.0f);
+  float const spec = glm::clamp(G * D * F, 0.0f, 1.0f);
   return glm::mix(m_color, hit.m_material->GetAlbedo(), 0.5f) * spec;
-}
-
-glm::vec3 DirectionalLight::TraceLightWithDepth(Hit const & hit, Tracer && tracer, int depth)
-{
-  if (!tracer || depth >= 3)
-    return m_color;
-
-  auto const lightDir = glm::normalize(-m_direction + glm::ballRand(0.1f));
-  auto const h = tracer(Ray(hit.m_position, lightDir), 0.01f, 1000.0f);
-  if (!h)
-    return m_color;
-
-  glm::vec3 c = glm::vec3(0.0f, 0.0f, 0.0f);
-  uint32_t kCount = 5;
-  for (uint32_t i = 0; i < kCount; ++i)
-  {
-    auto const dir = glm::normalize(h->m_normal + glm::ballRand(1.0f));
-    auto const hitSecondary = tracer(Ray(h->m_position, dir), 0.001f, 1000.0f);
-    if (!hitSecondary)
-      c += 0.5f * m_color;
-    else
-      c += 0.5f * TraceLightWithDepth(hitSecondary.value(), std::move(tracer), depth + 1);
-  }
-  return c / static_cast<float>(kCount);
 }
 }  // namespace ray_tracing

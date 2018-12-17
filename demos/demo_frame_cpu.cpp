@@ -2,10 +2,13 @@
 
 #include "ray_tracing/default_materials.hpp"
 
+#include <array>
 #include <cassert>
 
 namespace demo
 {
+uint32_t constexpr kMaxDepth = 10;
+
 DemoFrameCPU::DemoFrameCPU(uint32_t rayTracingThreadsCount)
   : ray_tracing::MultiThreadedFrame(rayTracingThreadsCount)
 {}
@@ -18,52 +21,80 @@ std::optional<ray_tracing::Hit> DemoFrameCPU::HitObjects(ray_tracing::Ray const 
 
 glm::vec3 DemoFrameCPU::RayTrace(ray_tracing::Ray const & ray, float znear, float zfar)
 {
-  using namespace std::placeholders;
+  std::array<ray_tracing::Material::ScatterResult, kMaxDepth> scatterResults {};
+  std::array<glm::vec3, kMaxDepth> diffuseLight {};
+  std::array<glm::vec3, kMaxDepth> specularLight {};
+  uint32_t scatterResultsCount = 0;
 
-  auto const hit = HitObjects(ray, znear, zfar);
-  if (!hit)
+  // Back tracing.
+  ray_tracing::Ray scatteredRay = ray;
+  for (; scatterResultsCount < kMaxDepth; ++scatterResultsCount)
+  {
+    auto const hit = HitObjects(scatteredRay, znear, zfar);
+    if (!hit)
+      break;
+
+    auto h = hit.value();
+    scatterResults[scatterResultsCount] = h.m_material->Scatter(scatteredRay, h);
+    if (fabs(scatterResults[scatterResultsCount].m_energyEmissivity) < ray_tracing::kEps)
+    {
+      scatterResults[scatterResultsCount].m_attenuation = m_backgroundColor;
+      scatterResults[scatterResultsCount].m_energyEmissivity = 1.0f;
+      ++scatterResultsCount;
+      break;
+    }
+
+    diffuseLight[scatterResultsCount] = TraceDiffuseLight(scatteredRay, h);
+    specularLight[scatterResultsCount] = GetSpecularLight(scatteredRay, h);
+
+    scatteredRay = scatterResults[scatterResultsCount].m_scatteredRay;
+
+    // Secondary hits start with a slight offset.
+    znear = 0.001f;
+  }
+
+  // Get we use environment color.
+  if (scatterResultsCount == 0)
     return m_backgroundColor;
 
-  auto const diffuseColor = RayTraceObjects(ray, hit.value(), 0.001f, zfar, 1);
+  // Accumulate color with energy saving influence.
+  int i = static_cast<int>(scatterResultsCount) - 1;
+  glm::vec3 att = glm::vec3(1.0f, 1.0f, 1.0f);
+  float restEnergy = 1.0f;
+  while (i >= 0)
+  {
+    auto const l = scatterResults[i].m_attenuation + diffuseLight[i] + specularLight[i];
+    att *= (l * restEnergy);
+    restEnergy *= scatterResults[i].m_energyEmissivity;
+    i--;
+    if (fabs(restEnergy) < ray_tracing::kEps)
+      break;
+  }
 
-  glm::vec3 specularColor = glm::vec3(0.0f, 0.0f, 0.0f);
-  for (auto const & source : m_lightSources)
-    specularColor += source->GetSpecular(ray, hit.value());
-  if (!m_lightSources.empty())
-    specularColor /= m_lightSources.size();
-
-  return diffuseColor + specularColor;
+  // Brightness correction.
+  return 0.5f * att;
 }
 
-glm::vec3 DemoFrameCPU::RayTraceObjects(ray_tracing::Ray const & ray,
-                                        ray_tracing::Hit const & hit,
-                                        float znear, float zfar, int depth)
+glm::vec3 DemoFrameCPU::TraceDiffuseLight(ray_tracing::Ray const & ray,
+                                          ray_tracing::Hit const & hit)
 {
   using namespace std::placeholders;
-
-  auto const scatterResult = hit.m_material->Scatter(ray, hit);
-
   glm::vec3 lightColor = glm::vec3(0.0f, 0.0f, 0.0f);
   for (auto const & source : m_lightSources)
   {
     lightColor += source->TraceLight(ray, hit,
       std::bind(&DemoFrameCPU::HitObjects, this, _1, _2, _3));
   }
-  if (!m_lightSources.empty())
-    lightColor /= m_lightSources.size();
+  return lightColor;
+}
 
-  auto c = lightColor * scatterResult.m_attenuation;
-  if (depth >= 5 || fabs(scatterResult.m_energyImpact) < ray_tracing::kEps)
-    return c;
-
-  auto const h = HitObjects(scatterResult.m_scatteredRay, znear, zfar);
-  if (h)
-  {
-    auto const sc = RayTraceObjects(scatterResult.m_scatteredRay, h.value(),
-                                    znear, zfar, depth + 1);
-    c = glm::mix(lightColor * sc, c, scatterResult.m_energyImpact);
-  }
-  return c;
+glm::vec3 DemoFrameCPU::GetSpecularLight(ray_tracing::Ray const & ray,
+                                         ray_tracing::Hit const & hit)
+{
+  glm::vec3 specularColor = glm::vec3(0.0f, 0.0f, 0.0f);
+  for (auto const & source : m_lightSources)
+    specularColor += source->GetSpecular(ray, hit);
+  return specularColor;
 }
 
 void DemoFrameCPU::AddObject(std::unique_ptr<ray_tracing::HitableObject> && object)

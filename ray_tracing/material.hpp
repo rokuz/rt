@@ -14,7 +14,7 @@ public:
   {
     glm::vec3 m_attenuation = {};
     Ray m_scatteredRay = {};
-    float m_energyImpact = 0.5f;
+    float m_energyEmissivity = 0.5f;
   };
 
   virtual uint8_t GetType() const = 0;
